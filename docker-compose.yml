@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  spring-app:
+    build: .
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_HOST=172.17.0.2
+      - DB_NAME=gesture
+      - DB_USER=gestureuser
+      - DB_PASSWORD=Gesture1234!
+    network_mode: bridge
