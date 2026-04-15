@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     // 이메일로 사용자 구분
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailAndIsDeactivatedFalse(email)
+        User user = userRepository.findByEmailAndDeactivatedFalse(email)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
 
         return org.springframework.security.core.userdetails.User.builder()
