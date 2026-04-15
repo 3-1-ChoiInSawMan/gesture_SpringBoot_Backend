@@ -43,6 +43,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -58,7 +59,7 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, customUserDetailsService),
                         UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(internalAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(internalAuthFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 
