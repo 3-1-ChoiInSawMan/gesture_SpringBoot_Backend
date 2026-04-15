@@ -22,32 +22,32 @@ public class TokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-
-    public String createToken(String email) {
+    public String createToken(String email, Long idx) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ACCESS_TOKEN_VALIDITY);
 
         return Jwts.builder()
                 .setSubject(email)
+                .claim("idx", idx)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String createRefreshToken(String email) {
+    public String createRefreshToken(String email, Long idx) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + REFRESH_TOKEN_VALIDITY);
 
         return Jwts.builder()
                 .setSubject(email)
+                .claim("idx", idx)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // email로 인증
     public String getEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -55,6 +55,15 @@ public class TokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public Long getIdx(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("idx", Long.class);
     }
 
     public boolean validateToken(String token) {
@@ -65,6 +74,4 @@ public class TokenProvider {
             return false;
         }
     }
-
-
 }

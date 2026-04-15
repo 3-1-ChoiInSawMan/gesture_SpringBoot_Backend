@@ -41,8 +41,8 @@ public class AuthService {
             throw new InvalidPasswordException();
         }
 
-        String accessToken = tokenProvider.createToken(user.getEmail());
-        String refreshToken = tokenProvider.createRefreshToken(user.getEmail());
+        String accessToken = tokenProvider.createToken(user.getEmail(), user.getIdx());
+        String refreshToken = tokenProvider.createRefreshToken(user.getEmail(), user.getIdx());
 
         saveRefreshToken(user, refreshToken);
 
