@@ -25,7 +25,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인 검증", description = "로그인 검증 시 사용하는 API 입니다.")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
         LoginResponse result = authService.login(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "검증되었습니다."));
     }
@@ -36,9 +36,6 @@ public class AuthController {
         RegisterResponse result = authService.register(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
-
-
-
 
 
 
