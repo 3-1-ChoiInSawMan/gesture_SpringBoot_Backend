@@ -11,6 +11,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.isDeactivated = false")
     Optional<User> findByEmailAndIsDeactivatedFalse(@Param("email") String email);
+
+    Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
     boolean existsById(String id);
 }

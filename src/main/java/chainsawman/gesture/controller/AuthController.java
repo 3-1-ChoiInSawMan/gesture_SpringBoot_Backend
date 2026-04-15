@@ -7,7 +7,6 @@ import chainsawman.gesture.dto.user.response.RegisterResponse;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +36,8 @@ public class AuthController {
         RegisterResponse result = authService.register(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
+
+
 
 
 
