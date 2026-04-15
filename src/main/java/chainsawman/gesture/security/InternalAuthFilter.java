@@ -1,7 +1,7 @@
 package chainsawman.gesture.security;
 
 import chainsawman.gesture.entity.user.User;
-import chainsawman.gesture.repository.UserRepository;
+import chainsawman.gesture.repository.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package chainsawman.gesture.repository;
+package chainsawman.gesture.repository.user;
 
 import chainsawman.gesture.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailAndIsDeactivatedFalse(String email);
+    boolean existsByEmail(String email);
+    boolean existsById(String id);
 }

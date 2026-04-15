@@ -1,8 +1,7 @@
 package chainsawman.gesture.security;
 
 import chainsawman.gesture.entity.user.User;
-import chainsawman.gesture.exceptions.user.UserNotFoundException;
-import chainsawman.gesture.repository.UserRepository;
+import chainsawman.gesture.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

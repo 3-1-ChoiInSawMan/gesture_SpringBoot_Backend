@@ -1,4 +1,4 @@
-package chainsawman.gesture.repository;
+package chainsawman.gesture.repository.room;
 
 import chainsawman.gesture.entity.room.RoomMember;
 import org.springframework.data.jpa.repository.JpaRepository;

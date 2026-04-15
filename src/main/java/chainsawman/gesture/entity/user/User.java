@@ -51,5 +51,5 @@ public class User {
     private ProviderType provider;
 
     @Column(name = "is_deactivated", nullable = false)
-    private boolean isDeactivated = false;
+    private Boolean isDeactivated = false;
 }

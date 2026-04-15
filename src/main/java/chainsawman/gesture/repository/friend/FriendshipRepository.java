@@ -1,4 +1,4 @@
-package chainsawman.gesture.repository;
+package chainsawman.gesture.repository.friend;
 
 import chainsawman.gesture.entity.friend.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
