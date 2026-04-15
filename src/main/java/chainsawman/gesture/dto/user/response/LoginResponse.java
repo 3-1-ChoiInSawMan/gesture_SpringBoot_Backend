@@ -13,8 +13,7 @@ public class LoginResponse {
 
     private Long idx;
 
-    @JsonProperty("user_id")
-    private Long userId;
+    private String id;
 
     private String email;
 
@@ -29,7 +28,7 @@ public class LoginResponse {
     private String provider;
 
     @JsonProperty("is_deactivated")
-    private boolean isDeactivated;
+    private Boolean isDeactivated;
 
     @JsonProperty("access_token")
     private String accessToken;
@@ -47,13 +46,13 @@ public class LoginResponse {
     public static LoginResponse from(User user, String profileUrl, String accessToken, String refreshToken) {
         return LoginResponse.builder()
                 .idx(user.getIdx())
-                .userId(user.getIdx())
+                .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileUrl(profileUrl)
                 .statusMessage(user.getStatusMessage())
                 .provider(user.getProvider() != null ? user.getProvider().name() : null)
-                .isDeactivated(user.isDeactivated())
+                .isDeactivated(user.getIsDeactivated())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .createdAt(user.getCreatedAt())

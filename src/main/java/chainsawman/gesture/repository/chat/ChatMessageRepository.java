@@ -1,4 +1,4 @@
-package chainsawman.gesture.repository;
+package chainsawman.gesture.repository.chat;
 
 import chainsawman.gesture.entity.chat.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;

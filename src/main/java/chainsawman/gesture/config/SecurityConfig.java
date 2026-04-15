@@ -38,10 +38,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(tokenProvider, customUserDetailsService);
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,6 +56,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().permitAll()
                 )
+                .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, customUserDetailsService),
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(internalAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

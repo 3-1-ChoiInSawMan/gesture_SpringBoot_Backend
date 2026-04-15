@@ -1,4 +1,4 @@
-package chainsawman.gesture.repository;
+package chainsawman.gesture.repository.user;
 
 import chainsawman.gesture.entity.user.VerificationCode;
 import org.springframework.data.jpa.repository.JpaRepository;
