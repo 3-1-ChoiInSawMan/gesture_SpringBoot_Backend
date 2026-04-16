@@ -2,16 +2,15 @@ package chainsawman.gesture.controller;
 
 import chainsawman.gesture.dto.user.response.MyProfileResponse;
 import chainsawman.gesture.dto.user.response.ProfileResponse;
+import chainsawman.gesture.dto.user.response.WithdrawResponse;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.With;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -33,6 +32,13 @@ public class UserController {
     public ResponseEntity<ApiResponse<MyProfileResponse>> getMyProfile() {
         MyProfileResponse result = userService.getMyProfile();
         return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
+    }
+
+    @DeleteMapping("/withdraw")
+    @Operation(summary = "유저 삭제", description = "회원 탈퇴 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<WithdrawResponse>> deleteUser() {
+        WithdrawResponse result = userService.deleteUser();
+        return ResponseEntity.ok(ApiResponse.ok(result, "삭제되었습니다."));
     }
 
 }

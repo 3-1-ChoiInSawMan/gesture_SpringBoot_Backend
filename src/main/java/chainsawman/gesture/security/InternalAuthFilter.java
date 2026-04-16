@@ -29,9 +29,9 @@ public class InternalAuthFilter extends OncePerRequestFilter {
         String userIdHeader = request.getHeader("X-User-Id");
 
         if (userIdHeader != null) {
-            Long userId = Long.parseLong(userIdHeader);
+            Long userIdx = Long.parseLong(userIdHeader);
 
-            User user = userRepository.findById(userId).orElse(null);
+            User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx).orElse(null);
 
             if (user != null) {
                 UsernamePasswordAuthenticationToken authentication =

@@ -2,12 +2,14 @@ package chainsawman.gesture.service;
 
 import chainsawman.gesture.dto.user.response.MyProfileResponse;
 import chainsawman.gesture.dto.user.response.ProfileResponse;
+import chainsawman.gesture.dto.user.response.WithdrawResponse;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.media.MediaRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,6 +20,7 @@ public class UserService {
     private final MediaRepository mediaRepository;
     private final SecurityUtils securityUtils;
 
+    // 프로필 조회
     public ProfileResponse getProfile(Long userIdx) {
         User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx)
                 .orElseThrow(UserNotFoundException::new);
@@ -29,6 +32,7 @@ public class UserService {
         return ProfileResponse.from(user, profileUrl);
     }
 
+    // 내 프로필 조회
     public MyProfileResponse getMyProfile() {
         User user = securityUtils.getCurrentUser();
 
@@ -38,4 +42,16 @@ public class UserService {
 
         return MyProfileResponse.from(user, profileUrl);
     }
+
+    // 유저 삭제(회원 탈퇴)
+    public WithdrawResponse deleteUser() {
+        User user = securityUtils.getCurrentUser();
+        user.setIsDeactivated(true);
+        userRepository.save(user);
+
+        SecurityContextHolder.clearContext();
+        return WithdrawResponse.from(user);
+    }
+
+
 }

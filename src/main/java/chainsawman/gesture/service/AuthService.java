@@ -34,7 +34,7 @@ public class AuthService {
 
     // 로그인
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailAndIsDeactivatedFalse(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
