@@ -66,25 +66,20 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          envs: DOCKER_IMAGE,CONTAINER_NAME,DB_URL,DB_USERNAME,DB_PASSWORD,JWT_SECRET
           script: |
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
             docker pull ${{ env.DOCKER_IMAGE }}:latest
-
             docker stop ${{ env.CONTAINER_NAME }} || true
             docker rm ${{ env.CONTAINER_NAME }} || true
-
-            # .env에서 변수 읽어서 직접 -e로 전달
-            source /home/ubuntu/.env
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart always \
               -p 8082:8082 \
-              -e "DB_URL=$DB_URL" \
-              -e "DB_USERNAME=$DB_USERNAME" \
-              -e "DB_PASSWORD=$DB_PASSWORD" \
-              -e "JWT_SECRET=$JWT_SECRET" \
+              -e "DB_URL=${{ secrets.DB_URL }}" \
+              -e "DB_USERNAME=${{ secrets.DB_USERNAME }}" \
+              -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+              -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
               ${{ env.DOCKER_IMAGE }}:latest
-
             docker image prune -f
             echo "배포 완료!"
