@@ -1,5 +1,6 @@
 package chainsawman.gesture.controller;
 
+import chainsawman.gesture.dto.user.response.MyProfileResponse;
 import chainsawman.gesture.dto.user.response.ProfileResponse;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.UserService;
@@ -24,6 +25,13 @@ public class UserController {
     @Operation(summary = "프로필 조회", description = "유저 프로필 조회 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<ProfileResponse>> getProfile(@PathVariable Long userIdx) {
         ProfileResponse result = userService.getProfile(userIdx);
+        return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "내 프로필 조회", description = "내 프로필 조회 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<MyProfileResponse>> getMyProfile() {
+        MyProfileResponse result = userService.getMyProfile();
         return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
     }
 
