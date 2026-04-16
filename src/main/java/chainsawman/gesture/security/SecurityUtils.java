@@ -2,7 +2,6 @@ package chainsawman.gesture.security;
 
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.auth.NotAuthenticatedException;
-import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,6 +20,6 @@ public class SecurityUtils {
             return user;
         }
 
-        throw new UserNotFoundException();
+        throw new NotAuthenticatedException();
     }
 }
