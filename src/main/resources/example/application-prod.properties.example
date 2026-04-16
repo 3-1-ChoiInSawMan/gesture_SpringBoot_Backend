@@ -1,0 +1,14 @@
+
+# prod DB 설정 (AWS 환경변수로 관리)
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+
+# JWT
+spring.jwt.secret=${JWT_SECRET}
+
+# SQL 로그 활성화 -> 개발용(바꿀 예정)
+spring.jpa.show-sql=false
+
+# Swagger 비활성화
+springdoc.swagger-ui.enabled=false
