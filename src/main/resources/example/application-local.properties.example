@@ -3,5 +3,5 @@ spring.datasource.url=jdbc:mysql://localhost:3306/{DB명}
 spring.datasource.username={DB유저명}
 spring.datasource.password={DB비밀번호}
 
-# JWT
+# JWT 키
 spring.jwt.secret={JWT시크릿키}
