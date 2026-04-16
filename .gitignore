@@ -39,3 +39,6 @@ out/
 # application properties
 src/main/resources/application-local.properties
 src/main/resources/application-prod.properties
+
+# docker-compose.yml
+docker-compose.yml
