@@ -110,7 +110,7 @@ public class AuthService {
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(InvalidRefreshTokenException::new);
 
-        User user = userRepository.findByIdxAndIsDeactivatedFalse(storedToken.getIdx())
+        User user = userRepository.findByIdxAndIsDeactivatedFalse(storedToken.getUser().getIdx())
                 .orElseThrow(UserNotFoundException::new);
 
         return RefreshTokenValidationResponse.from(user);
