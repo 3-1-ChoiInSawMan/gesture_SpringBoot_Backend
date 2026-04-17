@@ -1,8 +1,8 @@
 package chainsawman.gesture.controller;
 
-import chainsawman.gesture.dto.user.response.MyProfileResponse;
-import chainsawman.gesture.dto.user.response.ProfileResponse;
-import chainsawman.gesture.dto.user.response.WithdrawResponse;
+import chainsawman.gesture.dto.user.request.PatchMyProfileRequest;
+import chainsawman.gesture.dto.user.request.PatchPasswordRequest;
+import chainsawman.gesture.dto.user.response.*;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +34,21 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
     }
 
+    @PatchMapping("/me")
+    @Operation(summary = "내 프로필 수정", description = "내 프로필 수정 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<PatchMyProfileResponse>> patchMyProfile
+            (@RequestBody PatchMyProfileRequest request) {
+        PatchMyProfileResponse result = userService.patchMyProfile(request);
+        return ResponseEntity.ok(ApiResponse.ok(result, "수정되었습니다."));
+    }
+
+    @PatchMapping("/password")
+    @Operation(summary = "비밀번호 변경", description = "비밀번호 변경 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<PatchPasswordResponse>> patchPassword
+            (@RequestBody PatchPasswordRequest request) {
+        PatchPasswordResponse result = userService.patchPassword(request);
+        return ResponseEntity.ok(ApiResponse.ok(result, "변경되었습니다."));
+    }
     @DeleteMapping("/withdraw")
     @Operation(summary = "유저 삭제", description = "회원 탈퇴 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<WithdrawResponse>> deleteUser() {
