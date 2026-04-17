@@ -1,11 +1,15 @@
 package chainsawman.gesture.service;
 
+import chainsawman.gesture.controller.UserController;
 import chainsawman.gesture.dto.user.request.LoginRequest;
+import chainsawman.gesture.dto.user.request.RefreshTokenRequest;
 import chainsawman.gesture.dto.user.request.RegisterRequest;
 import chainsawman.gesture.dto.user.response.LoginResponse;
+import chainsawman.gesture.dto.user.response.RefreshTokenValidationResponse;
 import chainsawman.gesture.dto.user.response.RegisterResponse;
 import chainsawman.gesture.entity.user.RefreshToken;
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.exceptions.auth.InvalidRefreshTokenException;
 import chainsawman.gesture.exceptions.user.DuplicateEmailException;
 import chainsawman.gesture.exceptions.user.DuplicateIdException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
@@ -14,6 +18,7 @@ import chainsawman.gesture.global.TokenProvider;
 import chainsawman.gesture.repository.media.MediaRepository;
 import chainsawman.gesture.repository.user.RefreshTokenRepository;
 import chainsawman.gesture.repository.user.UserRepository;
+import chainsawman.gesture.security.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +35,7 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final MediaRepository mediaRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final SecurityUtils securityUtils;
 
 
     // 로그인
@@ -96,6 +102,32 @@ public class AuthService {
                 .createdAt(saved.getCreatedAt())
                 .build();
     }
+
+    // 리프레시 토큰 검증
+    public RefreshTokenValidationResponse refreshTokenValidation(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        User user = userRepository.findByIdxAndIsDeactivatedFalse(storedToken.getIdx())
+                .orElseThrow(UserNotFoundException::new);
+
+        return RefreshTokenValidationResponse.from(user);
+    }
+
+    // 리프레시 토큰 삭제
+    public void deleteRefreshToken(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        refreshTokenRepository.delete(storedToken);
+
+    }
+
+
 
     // 리프레시 토큰 저장 (있으면 업데이트 없으면 생성)
     private void saveRefreshToken(User user, String refreshToken) {
