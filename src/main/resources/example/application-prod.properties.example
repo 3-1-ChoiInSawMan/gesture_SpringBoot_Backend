@@ -4,9 +4,11 @@ spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
-
-spring.jwt.private-key=${JWT_PRIVATE_KEY}
-spring.jwt.public-key=${JWT_PUBLIC_KEY}
+# JWT (RS256) - PEM 파일 마운트 방식
+# EC2의 /home/ubuntu/app/keys/ 디렉토리에 PEM 파일을 두고
+# Docker 실행 시 -v /home/ubuntu/app/keys:/app/keys:ro 로 마운트
+spring.jwt.private-key=file:/app/keys/private_key.pem
+spring.jwt.public-key=file:/app/keys/public_key.pem
 
 # SQL 로그 활성화 -> 개발용(바꿀 예정입니다.)
 spring.jpa.show-sql=false
