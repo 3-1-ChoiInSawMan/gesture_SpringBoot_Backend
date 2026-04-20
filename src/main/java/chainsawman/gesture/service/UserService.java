@@ -102,5 +102,19 @@ public class UserService {
         return PatchPasswordResponse.from(user);
     }
 
+    // 사용자 검색
+    public UserResponse getUser(Long userIdx) {
+        User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx)
+                .orElseThrow(UserNotFoundException::new);
+
+        Optional<Media> mediaOptional = mediaRepository.findByUser_Idx(user.getIdx());
+
+        String profileUrl = mediaOptional
+                .map(media -> "/media/" + media.getUrl())
+                .orElse(null);
+
+        return UserResponse.from(user, profileUrl);
+    }
+
 
 }

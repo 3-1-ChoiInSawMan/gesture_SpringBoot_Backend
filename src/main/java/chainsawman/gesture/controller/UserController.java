@@ -8,7 +8,6 @@ import chainsawman.gesture.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.With;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,5 +54,14 @@ public class UserController {
         WithdrawResponse result = userService.deleteUser();
         return ResponseEntity.ok(ApiResponse.ok(result, "삭제되었습니다."));
     }
+
+    @GetMapping
+    @Operation(summary = "사용자 검색", description = "userIdx로 사용자를 조회하는 API 입니다.")
+    public ResponseEntity<ApiResponse<UserResponse>> getUser(@RequestParam Long userIdx) {
+        UserResponse result = userService.getUser(userIdx);
+        return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
+    }
+
+
 
 }
