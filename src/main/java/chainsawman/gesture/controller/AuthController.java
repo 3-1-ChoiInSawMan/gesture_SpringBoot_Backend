@@ -36,6 +36,10 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
 
+//    @PostMapping("/social-login")
+//    @Operation(summary = "소셜 로그인 처리", description = "소셜 로그인 시 사용하는 API 입니다.")
+//    public ResponseEntity<ApiResponse<SocialLoginRequest>>
+
     @PostMapping("/refresh")
     @Operation(summary = "리프레시 토큰 검증", description = "자동 로그인 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<RefreshTokenValidationResponse>> refreshTokenValidation
