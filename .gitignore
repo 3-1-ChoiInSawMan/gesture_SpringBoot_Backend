@@ -39,5 +39,8 @@ out/
 # application properties
 src/main/resources/application-local.properties
 
+# JWT key
+src/main/resources/keys/private_key.pem
+
 # docker-compose.yml
 docker-compose.yml
