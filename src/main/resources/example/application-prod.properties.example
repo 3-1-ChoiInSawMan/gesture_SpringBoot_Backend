@@ -1,5 +1,5 @@
 
-# prod DB 설정 (AWS 환경변수로 관리)
+# prod DB 설정 (AWS 환경변수로 관리합니다.)
 spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
