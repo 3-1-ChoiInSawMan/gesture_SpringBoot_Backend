@@ -17,7 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -103,17 +106,27 @@ public class UserService {
     }
 
     // 사용자 검색
-    public UserResponse getUser(Long userIdx) {
-        User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx)
-                .orElseThrow(UserNotFoundException::new);
+    public List<UserResponse> getUser(String userId) {
+        List<User> users = userRepository.findByIdContainingIgnoreCaseAndIsDeactivatedFalse(userId);
 
-        Optional<Media> mediaOptional = mediaRepository.findByUser_Idx(user.getIdx());
+        if (users.isEmpty()) {
+            throw new UserNotFoundException();
+        }
 
-        String profileUrl = mediaOptional
-                .map(media -> "/media/" + media.getUrl())
-                .orElse(null);
+        List<String> userIds = users.stream()
+                .map(User::getId)
+                .toList();
 
-        return UserResponse.from(user, profileUrl);
+        Map<String, String> profileUrlMap = mediaRepository.findByUser_IdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        media -> media.getUser().getId(),
+                        media -> "/media/" + media.getUrl()
+                ));
+        // 매핑
+        return users.stream()
+                .map(user -> UserResponse.from(user, profileUrlMap.get(user.getId())))
+                .toList();
     }
 
 

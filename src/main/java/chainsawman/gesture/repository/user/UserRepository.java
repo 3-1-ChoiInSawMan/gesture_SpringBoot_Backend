@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -14,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByIdxAndIsDeactivatedFalse(Long idx);
 
+    // 유저 검색
+    List<User> findByIdContainingIgnoreCaseAndIsDeactivatedFalse(String id);
     boolean existsByEmail(String email);
     boolean existsById(String id);
 }

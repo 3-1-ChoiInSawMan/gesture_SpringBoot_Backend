@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -56,9 +58,9 @@ public class UserController {
     }
 
     @GetMapping
-    @Operation(summary = "사용자 검색", description = "userIdx로 사용자를 조회하는 API 입니다.")
-    public ResponseEntity<ApiResponse<UserResponse>> getUser(@RequestParam Long userIdx) {
-        UserResponse result = userService.getUser(userIdx);
+    @Operation(summary = "사용자 검색", description = "userId로 사용자를 조회하는 API 입니다.")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUser(@RequestParam String userId) {
+        List<UserResponse> result = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
 

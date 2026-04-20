@@ -4,8 +4,9 @@ spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
-# JWT
-spring.jwt.secret=${JWT_SECRET}
+
+spring.jwt.private-key=${JWT_PRIVATE_KEY}
+spring.jwt.public-key=${JWT_PUBLIC_KEY}
 
 # SQL 로그 활성화 -> 개발용(바꿀 예정)
 spring.jpa.show-sql=false
