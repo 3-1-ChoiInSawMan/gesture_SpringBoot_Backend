@@ -50,6 +50,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private ProviderType provider;
 
+    @Column(name = "provider_id", length = 255, unique = true)
+    private String providerId;
+
     @Column(name = "is_deactivated", nullable = false)
     private Boolean isDeactivated = false;
 }
