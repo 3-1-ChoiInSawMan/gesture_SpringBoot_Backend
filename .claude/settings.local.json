@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(./gradlew compileJava)",
+      "Bash(./gradlew bootRun --args='--spring.profiles.active=local')",
+      "Bash(echo \"PID: $!\")",
+      "Bash(netstat -ano)",
+      "Bash(curl *)",
+      "Bash(mysql *)",
+      "Bash(wmic process *)",
+      "Bash(taskkill *)",
+      "Bash(./gradlew bootRun)",
+      "mcp__claude_ai_Notion__notion-update-page"
+    ]
+  }
+}
