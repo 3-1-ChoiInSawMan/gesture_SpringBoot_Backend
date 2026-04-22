@@ -1,6 +1,7 @@
 package chainsawman.gesture.entity.room;
 
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.RoomType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,10 @@ public class Room {
 
     @Column(name = "thumbnail_url", length = 255)
     private String thumbnailUrl;
+
+    @Column(length = 50)
+    @Enumerated(EnumType.STRING)
+    private RoomType category;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
