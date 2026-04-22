@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class RoomResponse {
-    @JsonProperty("room_id")
-    private Long roomId;
+    @JsonProperty("room_idx")
+    private Long roomIdx;
 
     private String title;
     private String category;

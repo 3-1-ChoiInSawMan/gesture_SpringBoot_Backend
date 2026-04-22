@@ -7,8 +7,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class RoomListResponse {
-    @JsonProperty("room_id")
-    private Long roomId;
+    @JsonProperty("room_idx")
+    private Long roomIdx;
 
     private String title;
     private String category;

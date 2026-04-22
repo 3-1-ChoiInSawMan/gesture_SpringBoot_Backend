@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class RoomPatchResponse {
-    @JsonProperty("room_id")
-    private Long roomId;
+    @JsonProperty("room_idx")
+    private Long roomIdx;
 
     private String title;
     private String category;
@@ -18,11 +18,23 @@ public class RoomPatchResponse {
     @JsonProperty("max_participant")
     private int maxParticipant;
 
+    @JsonProperty("current_participant")
+    private int currentParticipant;
+
     @JsonProperty("is_public")
     private boolean publicRoom;
 
     @JsonProperty("has_password")
     private boolean hasPassword;
+
+    @JsonProperty("thumbnail_url")
+    private String thumbnailUrl;
+
+    @JsonProperty("host_user_idx")
+    private Long hostUserIdx;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
 
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;

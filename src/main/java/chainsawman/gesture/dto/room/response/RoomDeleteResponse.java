@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 public class RoomDeleteResponse {
     private boolean deleted;
 
-    @JsonProperty("room_id")
-    private Long roomId;
+    @JsonProperty("room_idx")
+    private Long roomIdx;
 
     @JsonProperty("deleted_at")
     private LocalDateTime deletedAt;
