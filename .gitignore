@@ -44,3 +44,6 @@ src/main/resources/keys/private_key.pem
 
 # docker-compose.yml
 docker-compose.yml
+
+### OS / Shell ###
+*.stackdump
