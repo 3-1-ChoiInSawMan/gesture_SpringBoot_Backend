@@ -4,18 +4,23 @@ import chainsawman.gesture.dto.user.request.PatchMyProfileRequest;
 import chainsawman.gesture.dto.user.request.PatchPasswordRequest;
 import chainsawman.gesture.dto.user.response.*;
 import chainsawman.gesture.entity.media.Media;
+import chainsawman.gesture.entity.room.Room;
+import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.RoomRole;
 import chainsawman.gesture.exceptions.media.MediaNotFoundException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.media.MediaRepository;
+import chainsawman.gesture.repository.room.RoomMemberRepository;
+import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +33,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MediaRepository mediaRepository;
+    private final RoomRepository roomRepository;
+    private final RoomMemberRepository roomMemberRepository;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
 
@@ -55,8 +62,28 @@ public class UserService {
     }
 
     // 유저 삭제(회원 탈퇴)
+    @Transactional
     public WithdrawResponse deleteUser() {
         User user = securityUtils.getCurrentUser();
+
+        List<Room> hostedRooms = roomRepository.findAllByHost_Idx(user.getIdx());
+        for (Room room : hostedRooms) {
+            roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(room.getIdx(), user.getIdx())
+                    .ifPresentOrElse(
+                            nextMember -> {
+                                nextMember.setRole(RoomRole.HOST);
+                                room.setHost(nextMember.getUser());
+                                roomMemberRepository.save(nextMember);
+                                roomRepository.save(room);
+                                roomMemberRepository.deleteByRoom_IdxAndUser_Idx(room.getIdx(), user.getIdx());
+                            },
+                            () -> {
+                                roomMemberRepository.deleteAllByRoom_Idx(room.getIdx());
+                                roomRepository.delete(room);
+                            }
+                    );
+        }
+
         user.setIsDeactivated(true);
         userRepository.save(user);
 
@@ -65,6 +92,7 @@ public class UserService {
     }
 
     // 내 프로필 수정
+    @Transactional
     public PatchMyProfileResponse patchMyProfile(PatchMyProfileRequest request) {
         User user = securityUtils.getCurrentUser();
 
@@ -78,15 +106,16 @@ public class UserService {
 
         Optional<Media> mediaOptional = mediaRepository.findByUser_Idx(user.getIdx());
 
+        String profileUrl = mediaOptional
+                .map(media -> "/media/" + media.getUrl())
+                .orElse(null);
+
         if (request.getProfileUrl() != null) {
             Media media = mediaOptional.orElseThrow(MediaNotFoundException::new);
             media.setUrl(request.getProfileUrl());
             mediaRepository.save(media);
+            profileUrl = "/media/" + request.getProfileUrl();
         }
-
-        String profileUrl = mediaOptional
-                .map(media -> "/media/" + media.getUrl())
-                .orElse(null);
 
         return PatchMyProfileResponse.from(user, profileUrl);
     }
@@ -110,7 +139,7 @@ public class UserService {
         List<User> users = userRepository.findByIdContainingIgnoreCaseAndIsDeactivatedFalse(userId);
 
         if (users.isEmpty()) {
-            throw new UserNotFoundException();
+            return List.of();
         }
 
         List<String> userIds = users.stream()
