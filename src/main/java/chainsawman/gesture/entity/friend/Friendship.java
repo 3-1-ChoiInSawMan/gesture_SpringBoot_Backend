@@ -1,6 +1,7 @@
 package chainsawman.gesture.entity.friend;
 
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.FriendshipStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,11 +31,9 @@ public class Friendship {
     @JoinColumn(name = "friend_idx", nullable = false)
     private User friend;
 
-    @Column(nullable = false)
-    private boolean accept = false;
-
-    @Column(name = "not_accept", nullable = false)
-    private boolean notAccept = false;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private FriendshipStatus status = FriendshipStatus.PENDING;
 
     @CreatedDate
     @Column(name = "request_at", nullable = false, updatable = false)
