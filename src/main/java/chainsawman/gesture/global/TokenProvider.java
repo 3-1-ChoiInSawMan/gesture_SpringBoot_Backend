@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +22,8 @@ import java.util.Date;
 @Component
 public class TokenProvider {
 
-    private final Resource privateKeyResource;
-    private final Resource publicKeyResource;
+    private final String privateKeyValue;
+    private final String publicKeyValue;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
@@ -31,43 +32,48 @@ public class TokenProvider {
     private static final long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 7;  // 7일
 
     public TokenProvider(
-            @Value("${spring.jwt.private-key}") Resource privateKeyResource,
-            @Value("${spring.jwt.public-key}") Resource publicKeyResource
+            @Value("${spring.jwt.private-key}") String privateKeyValue,
+            @Value("${spring.jwt.public-key}") String publicKeyValue
     ) {
-        this.privateKeyResource = privateKeyResource;
-        this.publicKeyResource = publicKeyResource;
+        this.privateKeyValue = privateKeyValue;
+        this.publicKeyValue = publicKeyValue;
     }
 
     @PostConstruct
     public void init() throws Exception {
-        this.privateKey = loadPrivateKey(privateKeyResource);
-        this.publicKey = loadPublicKey(publicKeyResource);
+        this.privateKey = loadPrivateKey(resolveKeyContent(privateKeyValue));
+        this.publicKey = loadPublicKey(resolveKeyContent(publicKeyValue));
     }
 
-    private PrivateKey loadPrivateKey(Resource resource) throws Exception {
-        String pem = readPem(resource)
+    // PEM 문자열이면 직접 사용, 아니면 classpath:/file: 경로로 로드
+    private String resolveKeyContent(String value) throws Exception {
+        if (value.startsWith("-----")) {
+            return value;
+        }
+        Resource resource = new DefaultResourceLoader().getResource(value);
+        try (InputStream is = resource.getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private PrivateKey loadPrivateKey(String pem) throws Exception {
+        String base64 = pem
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s+", "");
-        byte[] decoded = Base64.getDecoder().decode(pem);
+        byte[] decoded = Base64.getDecoder().decode(base64);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
         return KeyFactory.getInstance("RSA").generatePrivate(spec);
     }
 
-    private PublicKey loadPublicKey(Resource resource) throws Exception {
-        String pem = readPem(resource)
+    private PublicKey loadPublicKey(String pem) throws Exception {
+        String base64 = pem
                 .replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s+", "");
-        byte[] decoded = Base64.getDecoder().decode(pem);
+        byte[] decoded = Base64.getDecoder().decode(base64);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
         return KeyFactory.getInstance("RSA").generatePublic(spec);
-    }
-
-    private String readPem(Resource resource) throws Exception {
-        try (InputStream is = resource.getInputStream()) {
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        }
     }
 
     public String createToken(String email, Long idx) {
