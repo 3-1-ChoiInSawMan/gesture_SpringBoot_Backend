@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RoomPatchRequest {
     private String title;
-    private String description;
     private String category;
 
     @JsonProperty("max_participant")
