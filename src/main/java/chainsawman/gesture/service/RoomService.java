@@ -48,7 +48,6 @@ public class RoomService {
         Room room = new Room();
         room.setHost(currentUser);
         room.setTitle(request.getTitle());
-        room.setDescription(request.getDescription());
         room.setCategory(parseCategory(request.getCategory()));
         room.setMaxParticipant(request.getMaxParticipant());
         room.setPublic(request.isPublicRoom());
@@ -62,7 +61,7 @@ public class RoomService {
         roomMemberRepository.save(hostMember);
 
         return RoomResponse.builder()
-                .roomId(room.getIdx())
+                .roomIdx(room.getIdx())
                 .title(room.getTitle())
                 .category(categoryName(room.getCategory()))
                 .maxParticipant(room.getMaxParticipant())
@@ -99,9 +98,8 @@ public class RoomService {
         int currentParticipant = roomMemberRepository.countByRoom_Idx(roomIdx);
 
         return RoomDetailResponse.builder()
-                .roomId(room.getIdx())
+                .roomIdx(room.getIdx())
                 .title(room.getTitle())
-                .description(room.getDescription())
                 .category(categoryName(room.getCategory()))
                 .maxParticipant(room.getMaxParticipant())
                 .currentParticipant(currentParticipant)
@@ -122,11 +120,11 @@ public class RoomService {
             throw new AccessDeniedException("방장만 수정할 수 있습니다.");
         }
 
+        int currentCount = roomMemberRepository.countByRoom_Idx(roomIdx);
+
         if (request.getTitle() != null) room.setTitle(request.getTitle());
-        if (request.getDescription() != null) room.setDescription(request.getDescription());
         if (request.getCategory() != null) room.setCategory(parseCategory(request.getCategory()));
         if (request.getMaxParticipant() > 0) {
-            int currentCount = roomMemberRepository.countByRoom_Idx(roomIdx);
             if (request.getMaxParticipant() < currentCount) {
                 throw new RoomMaxParticipantExceededException(currentCount);
             }
@@ -143,12 +141,16 @@ public class RoomService {
         roomRepository.save(room);
 
         return RoomPatchResponse.builder()
-                .roomId(room.getIdx())
+                .roomIdx(room.getIdx())
                 .title(room.getTitle())
                 .category(categoryName(room.getCategory()))
                 .maxParticipant(room.getMaxParticipant())
+                .currentParticipant(currentCount)
                 .publicRoom(room.isPublic())
                 .hasPassword(room.getPassword() != null)
+                .thumbnailUrl(room.getThumbnailUrl())
+                .hostUserIdx(room.getHost().getIdx())
+                .createdAt(room.getCreatedAt())
                 .updatedAt(room.getUpdatedAt())
                 .build();
     }
@@ -168,7 +170,7 @@ public class RoomService {
 
         return RoomDeleteResponse.builder()
                 .deleted(true)
-                .roomId(roomIdx)
+                .roomIdx(roomIdx)
                 .deletedAt(LocalDateTime.now())
                 .build();
     }
@@ -202,8 +204,10 @@ public class RoomService {
         roomMemberRepository.save(member);
 
         return RoomJoinResponse.builder()
-                .roomId(room.getIdx())
+                .roomMemberIdx(member.getIdx())
+                .roomIdx(room.getIdx())
                 .userIdx(currentUser.getIdx())
+                .role(member.getRole().name())
                 .joinedAt(member.getCreatedAt())
                 .currentParticipant(currentParticipant + 1)
                 .maxParticipant(room.getMaxParticipant())
@@ -212,7 +216,7 @@ public class RoomService {
 
     private RoomListResponse toRoomListResponse(Room room, int currentParticipant) {
         return RoomListResponse.builder()
-                .roomId(room.getIdx())
+                .roomIdx(room.getIdx())
                 .title(room.getTitle())
                 .category(categoryName(room.getCategory()))
                 .currentParticipant(currentParticipant)

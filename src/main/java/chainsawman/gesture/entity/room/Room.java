@@ -32,9 +32,6 @@ public class Room {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     @Column(name = "max_participant", nullable = false)
     private int maxParticipant;
 
