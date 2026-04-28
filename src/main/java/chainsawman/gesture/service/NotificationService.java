@@ -3,9 +3,11 @@ package chainsawman.gesture.service;
 import chainsawman.gesture.dto.notification.request.NotificationCreateRequest;
 import chainsawman.gesture.dto.notification.response.NotificationCreateResponse;
 import chainsawman.gesture.dto.notification.response.NotificationListResponse;
+import chainsawman.gesture.dto.notification.response.NotificationReadResponse;
 import chainsawman.gesture.entity.notification.Notification;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.NotificationType;
+import chainsawman.gesture.exceptions.notification.NotificationNotFoundException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.notification.NotificationRepository;
 import chainsawman.gesture.repository.user.UserRepository;
@@ -54,6 +56,7 @@ public class NotificationService {
         return NotificationCreateResponse.from(notification);
     }
 
+    // 알림 목록 조회
     @Transactional(readOnly = true)
     public List<NotificationListResponse> getNotifications() {
         User user = securityUtils.getCurrentUser();
@@ -61,6 +64,16 @@ public class NotificationService {
                 .stream()
                 .map(NotificationListResponse::from)
                 .toList();
+    }
+
+    // 알림 읽음 처리
+    @Transactional
+    public NotificationReadResponse readNotification(Long notificationIdx) {
+        User user = securityUtils.getCurrentUser();
+        Notification notification = notificationRepository.findByIdxAndUser(notificationIdx, user)
+                .orElseThrow(NotificationNotFoundException::new);
+        notification.setRead(true);
+        return NotificationReadResponse.from(notification);
     }
 
     private String generateContent(NotificationType type, User actor) {
