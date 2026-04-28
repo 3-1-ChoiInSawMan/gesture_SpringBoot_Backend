@@ -27,6 +27,12 @@ public class Notification {
     @JoinColumn(name = "user_idx", nullable = false)
     private User user;
 
+
+    // 알림 발생시킨 사람
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "actor_id", nullable = true)
+    private User actor;
+
     @Column(name = "target_id", length = 100)
     private String targetId;
 
