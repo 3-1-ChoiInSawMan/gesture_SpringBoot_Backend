@@ -1,9 +1,8 @@
 package chainsawman.gesture.controller;
 
 import chainsawman.gesture.dto.notification.request.NotificationCreateRequest;
-import chainsawman.gesture.dto.notification.response.NotificationCreateResponse;
-import chainsawman.gesture.dto.notification.response.NotificationListResponse;
-import chainsawman.gesture.dto.notification.response.NotificationReadResponse;
+import chainsawman.gesture.dto.notification.request.NotificationSettingPatchRequest;
+import chainsawman.gesture.dto.notification.response.*;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,5 +44,24 @@ public class NotificationController {
         NotificationReadResponse result = notificationService.readNotification(notificationIdx);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
+
+    @GetMapping("/settings")
+    @Operation(summary = "알림 설정 조회", description = "알림 설정 조회 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<List<NotificationSettingResponse>>> getSetting() {
+        List<NotificationSettingResponse> result = notificationService.getSetting();
+        return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
+    }
+
+    @PatchMapping("/settings/{type}")
+    @Operation(summary = "알림 설정 변경", description = "알림 설정 변경 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<NotificationSettingPatchResponse>> patchSetting(
+            @PathVariable String type,
+            @Valid @RequestBody NotificationSettingPatchRequest request) {
+        NotificationSettingPatchResponse result = notificationService.patchSetting(type, request);
+        return ResponseEntity.ok(ApiResponse.ok(result, "설정이 변경되었습니다."));
+    }
+
+
+
 
 }

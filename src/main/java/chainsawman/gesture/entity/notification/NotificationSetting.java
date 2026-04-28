@@ -6,12 +6,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification_settings")
 @Getter
 @Setter
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class NotificationSetting {
 
     @Id
@@ -28,4 +33,8 @@ public class NotificationSetting {
 
     @Column(name = "is_used", nullable = false)
     private boolean isUsed = true;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false, columnDefinition = "datetime(6) DEFAULT CURRENT_TIMESTAMP(6)")
+    private LocalDateTime updatedAt;
 }
