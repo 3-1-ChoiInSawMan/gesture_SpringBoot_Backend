@@ -42,19 +42,19 @@ public class ApiGlobalResponseHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("COMMON_403", e.getMessage()));
+                .body(ApiResponse.error("COMMON_403", "접근 권한이 없습니다."));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(NoHandlerFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("COMMON_404", e.getMessage()));
+                .body(ApiResponse.error("COMMON_404", "요청한 리소스를 찾을 수 없습니다."));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequest(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("COMMON_400", e.getMessage()));
+                .body(ApiResponse.error("COMMON_400", "잘못된 요청입니다."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -66,7 +66,7 @@ public class ApiGlobalResponseHandler {
                 .findFirst()
                 .orElse("입력값이 올바르지 않습니다.");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("COMMON_400", message));
+                .body(ApiResponse.error("COMMON_400", "입력값이 올바르지 않습니다."));
     }
 
     @ExceptionHandler(Exception.class)
