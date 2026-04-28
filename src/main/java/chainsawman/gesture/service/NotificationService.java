@@ -1,16 +1,21 @@
 package chainsawman.gesture.service;
 
 import chainsawman.gesture.dto.notification.request.NotificationCreateRequest;
-import chainsawman.gesture.dto.notification.response.NotificationCreateResponse;
-import chainsawman.gesture.dto.notification.response.NotificationListResponse;
-import chainsawman.gesture.dto.notification.response.NotificationReadResponse;
+import chainsawman.gesture.dto.notification.request.NotificationSettingPatchRequest;
+import chainsawman.gesture.dto.notification.response.*;
 import chainsawman.gesture.entity.notification.Notification;
+import chainsawman.gesture.entity.notification.NotificationSetting;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.NotificationType;
 import chainsawman.gesture.exceptions.notification.NotificationNotFoundException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.notification.NotificationRepository;
+import chainsawman.gesture.repository.notification.NotificationSettingRepository;
 import chainsawman.gesture.repository.user.UserRepository;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +28,7 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
 
@@ -74,6 +80,47 @@ public class NotificationService {
                 .orElseThrow(NotificationNotFoundException::new);
         notification.setRead(true);
         return NotificationReadResponse.from(notification);
+    }
+
+    // 알림 설정 조회
+    @Transactional
+    public List<NotificationSettingResponse> getSetting() {
+        User user = securityUtils.getCurrentUser();
+        List<NotificationSetting> settings = notificationSettingRepository.findByUser(user);
+
+        Map<NotificationType, NotificationSetting> settingMap = settings.stream()
+                .collect(Collectors.toMap(NotificationSetting::getType, s -> s));
+
+        return Arrays.stream(NotificationType.values())
+                .map(type -> {
+                    NotificationSetting setting = settingMap.get(type);
+                    if (setting == null) {
+                        setting = createDefaultSetting(user, type);
+                    }
+                    return NotificationSettingResponse.from(setting);
+                })
+                .toList();
+    }
+
+    // 알림 설정 변경
+    @Transactional
+    public NotificationSettingPatchResponse patchSetting(String type, NotificationSettingPatchRequest request) {
+        User user = securityUtils.getCurrentUser();
+        NotificationType notificationType = NotificationType.valueOf(type.toUpperCase());
+
+        NotificationSetting setting = notificationSettingRepository.findByUserAndType(user, notificationType)
+                .orElseGet(() -> createDefaultSetting(user, notificationType));
+
+        setting.setUsed(request.getEnabled());
+        return NotificationSettingPatchResponse.from(setting);
+    }
+
+    private NotificationSetting createDefaultSetting(User user, NotificationType type) {
+        NotificationSetting setting = new NotificationSetting();
+        setting.setUser(user);
+        setting.setType(type);
+        setting.setUsed(true);
+        return notificationSettingRepository.save(setting);
     }
 
     private String generateContent(NotificationType type, User actor) {
