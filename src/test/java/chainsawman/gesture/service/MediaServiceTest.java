@@ -63,7 +63,6 @@ class MediaServiceTest {
         MediaUploadResponse response = mediaService.upload(imageFile, MediaEntityType.PROFILE);
 
         assertThat(response.getFileUrl()).isNotNull();
-        assertThat(response.getProfileUrl()).startsWith("/media/");
 
         ArgumentCaptor<Media> captor = ArgumentCaptor.forClass(Media.class);
         verify(mediaRepository).save(captor.capture());
@@ -92,18 +91,16 @@ class MediaServiceTest {
         verify(mediaRepository).save(captor.capture());
         assertThat(captor.getValue().getEntityType()).isEqualTo(MediaEntityType.PROFILE);
 
-        assertThat(response.getProfileUrl()).startsWith("/media/");
     }
 
     @Test
-    @DisplayName("ROOM 업로드 - DB 저장, profile_url 없음")
+    @DisplayName("ROOM 업로드 - DB 저장")
     void upload_room_saves_to_db() throws IOException {
         given(amazonS3.getUrl(anyString(), anyString())).willReturn(new URL("https://s3.amazonaws.com/test-bucket/rooms/1/uuid.jpg"));
 
         MediaUploadResponse response = mediaService.upload(imageFile, MediaEntityType.ROOM);
 
         assertThat(response.getFileUrl()).isNotNull();
-        assertThat(response.getProfileUrl()).isNull();
 
         ArgumentCaptor<Media> captor = ArgumentCaptor.forClass(Media.class);
         verify(mediaRepository).save(captor.capture());
@@ -113,13 +110,11 @@ class MediaServiceTest {
     }
 
     @Test
-    @DisplayName("CHAT 업로드 - DB 저장, profile_url 없음")
+    @DisplayName("CHAT 업로드 - DB 저장")
     void upload_chat_saves_to_db() throws IOException {
         given(amazonS3.getUrl(anyString(), anyString())).willReturn(new URL("https://s3.amazonaws.com/test-bucket/chats/1/uuid.jpg"));
 
         MediaUploadResponse response = mediaService.upload(imageFile, MediaEntityType.CHAT);
-
-        assertThat(response.getProfileUrl()).isNull();
 
         ArgumentCaptor<Media> captor = ArgumentCaptor.forClass(Media.class);
         verify(mediaRepository).save(captor.capture());
@@ -127,13 +122,11 @@ class MediaServiceTest {
     }
 
     @Test
-    @DisplayName("QUICK_SLOT 업로드 - DB 저장, profile_url 없음")
+    @DisplayName("QUICK_SLOT 업로드 - DB 저장")
     void upload_quick_slot_saves_to_db() throws IOException {
         given(amazonS3.getUrl(anyString(), anyString())).willReturn(new URL("https://s3.amazonaws.com/test-bucket/quick-slots/1/uuid.jpg"));
 
         MediaUploadResponse response = mediaService.upload(imageFile, MediaEntityType.QUICK_SLOT);
-
-        assertThat(response.getProfileUrl()).isNull();
 
         ArgumentCaptor<Media> captor = ArgumentCaptor.forClass(Media.class);
         verify(mediaRepository).save(captor.capture());
