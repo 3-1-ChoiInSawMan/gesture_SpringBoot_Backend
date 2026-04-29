@@ -29,9 +29,8 @@ public class Media {
     @Column(columnDefinition = "TEXT")
     private String file;
 
-    @Column(nullable = false, length = 36,
-            columnDefinition = "VARCHAR(36) NOT NULL DEFAULT (UUID())")
-    private String url;
+    @Column(unique = true, nullable = false)
+    private String uuid;
 
     @Column(nullable = false, length = 140)
     private String name;

@@ -45,7 +45,7 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUrl())
+                .map(media -> "/media/" + media.getUuid())
                 .orElse(null);
 
         return ProfileResponse.from(user, profileUrl);
@@ -57,7 +57,7 @@ public class UserService {
         User user = securityUtils.getCurrentUser();
 
         String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUrl())
+                .map(media -> "/media/" + media.getUuid())
                 .orElse(null);
 
         return MyProfileResponse.from(user, profileUrl);
@@ -109,12 +109,12 @@ public class UserService {
         Optional<Media> mediaOptional = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE);
 
         String profileUrl = mediaOptional
-                .map(media -> "/media/" + media.getUrl())
+                .map(media -> "/media/" + media.getUuid())
                 .orElse(null);
 
         if (request.getProfileUrl() != null) {
             Media media = mediaOptional.orElseThrow(MediaNotFoundException::new);
-            media.setUrl(request.getProfileUrl());
+            media.setUuid(request.getProfileUrl());
             mediaRepository.save(media);
             profileUrl = "/media/" + request.getProfileUrl();
         }
@@ -152,7 +152,7 @@ public class UserService {
                 .stream()
                 .collect(Collectors.toMap(
                         media -> media.getUser().getId(),
-                        media -> "/media/" + media.getUrl()
+                        media -> "/media/" + media.getUuid()
                 ));
         // 매핑
         return users.stream()

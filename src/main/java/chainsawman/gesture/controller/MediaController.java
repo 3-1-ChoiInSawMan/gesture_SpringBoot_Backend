@@ -1,6 +1,7 @@
 package chainsawman.gesture.controller;
 
 import chainsawman.gesture.dto.media.response.MediaUploadResponse;
+import chainsawman.gesture.dto.media.response.MediaUrlResponse;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.service.MediaService;
@@ -24,12 +25,20 @@ public class MediaController {
     private final MediaService mediaService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "파일 업로드", description = "s3에 파일을 업로드 하는 API 입니다.")
-    public ResponseEntity<ApiResponse<MediaUploadResponse>>
-        upload(@Parameter(description = "업로드할 파일") @RequestPart("file") MultipartFile file,
-           @RequestParam("entityType") MediaEntityType entityType) throws IOException {
+    @Operation(summary = "파일 업로드", description = "S3에 파일을 업로드하고 UUID와 URL을 반환합니다.")
+    public ResponseEntity<ApiResponse<MediaUploadResponse>> upload(
+            @Parameter(description = "업로드할 파일") @RequestPart("file") MultipartFile file,
+            @RequestParam("entityType") MediaEntityType entityType) throws IOException {
         MediaUploadResponse result = mediaService.upload(file, entityType);
         return ResponseEntity.ok(ApiResponse.ok(result, "파일이 업로드되었습니다."));
+    }
+
+    @GetMapping("/{mediaUuid}")
+    @Operation(summary = "파일 URL 조회", description = "UUID로 파일의 S3 URL을 조회합니다.")
+    public ResponseEntity<ApiResponse<MediaUrlResponse>> getMediaUrl(
+            @PathVariable String mediaUuid) {
+        MediaUrlResponse result = mediaService.getMediaUrl(mediaUuid);
+        return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
     }
 
 
