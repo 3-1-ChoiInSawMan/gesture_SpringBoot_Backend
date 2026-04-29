@@ -2,7 +2,7 @@ package chainsawman.gesture.controller;
 
 import chainsawman.gesture.dto.media.response.MediaUploadResponse;
 import chainsawman.gesture.global.ApiResponse;
-import chainsawman.gesture.service.MediaEntityType;
+import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.service.MediaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

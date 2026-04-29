@@ -4,6 +4,7 @@ import chainsawman.gesture.dto.user.request.*;
 import chainsawman.gesture.dto.user.response.*;
 import chainsawman.gesture.entity.user.RefreshToken;
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.enums.ProviderType;
 import chainsawman.gesture.exceptions.auth.InvalidRefreshTokenException;
 import chainsawman.gesture.exceptions.user.DeactivatedUserException;
@@ -50,7 +51,7 @@ public class AuthService {
 
         saveRefreshToken(user, refreshToken);
 
-        String profileUrl = mediaRepository.findByUser_Idx(user.getIdx())
+        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
                 .map(media -> "/media/" + media.getUrl())
                 .orElse(null);
 
@@ -137,7 +138,7 @@ public class AuthService {
     }
 
     private SocialLoginResponse loginSocialUser(User user) {
-        String profileUrl = mediaRepository.findByUser_Idx(user.getIdx())
+        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
                 .map(media -> "/media/" + media.getUrl())
                 .orElse(null);
         String accessToken = tokenProvider.createToken(user.getEmail(), user.getIdx());
