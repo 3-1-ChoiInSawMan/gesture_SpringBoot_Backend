@@ -9,6 +9,8 @@ import java.util.Optional;
 
 
 public interface MediaRepository extends JpaRepository<Media, Long> {
+    Optional<Media> findByUuid(String uuid);
+
     Optional<Media> findByUser_IdxAndEntityType(Long userIdx, MediaEntityType entityType);
 
     List<Media> findByUser_IdInAndEntityType(List<String> ids, MediaEntityType entityType);

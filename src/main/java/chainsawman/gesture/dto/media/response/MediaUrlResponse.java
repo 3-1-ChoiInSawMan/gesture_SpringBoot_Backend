@@ -6,11 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class MediaUploadResponse {
-
-    @JsonProperty("media_uuid")
-    private String mediaUuid;
+public class MediaUrlResponse {
 
     @JsonProperty("file_url")
     private String fileUrl;
+
 }

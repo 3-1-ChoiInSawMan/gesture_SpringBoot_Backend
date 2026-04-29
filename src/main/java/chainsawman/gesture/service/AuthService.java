@@ -52,7 +52,7 @@ public class AuthService {
         saveRefreshToken(user, refreshToken);
 
         String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUrl())
+                .map(media -> "/media/" + media.getUuid())
                 .orElse(null);
 
         return LoginResponse.builder()
@@ -139,7 +139,7 @@ public class AuthService {
 
     private SocialLoginResponse loginSocialUser(User user) {
         String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUrl())
+                .map(media -> "/media/" + media.getUuid())
                 .orElse(null);
         String accessToken = tokenProvider.createToken(user.getEmail(), user.getIdx());
         String refreshToken = tokenProvider.createRefreshToken(user.getEmail(), user.getIdx());

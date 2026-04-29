@@ -1,9 +1,11 @@
 package chainsawman.gesture.service;
 
 import chainsawman.gesture.dto.media.response.MediaUploadResponse;
+import chainsawman.gesture.dto.media.response.MediaUrlResponse;
 import chainsawman.gesture.entity.media.Media;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.MediaEntityType;
+import chainsawman.gesture.exceptions.media.MediaNotFoundException;
 import chainsawman.gesture.repository.media.MediaRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import com.amazonaws.services.s3.AmazonS3;
@@ -55,12 +57,20 @@ public class MediaService {
         Media media = new Media();
         media.setUser(user);
         media.setEntityType(type);
-        media.setUrl(uuid);
+        media.setUuid(uuid);
         media.setName(file.getOriginalFilename());
         media.setFile(key);
         mediaRepository.save(media);
 
-        return new MediaUploadResponse(fileUrl);
+        return new MediaUploadResponse(uuid, fileUrl);
+    }
+
+    // 파일 URL 조회
+    public MediaUrlResponse getMediaUrl(String uuid) {
+        Media media = mediaRepository.findByUuid(uuid)
+                .orElseThrow(MediaNotFoundException::new);
+        String fileUrl = amazonS3.getUrl(bucket, media.getFile()).toString();
+        return new MediaUrlResponse(fileUrl);
     }
 
     private String getExtension(String filename) {
