@@ -52,5 +52,7 @@ docker-compose.yml
 # claude
 .claude/
 
-#bfg-1.15.0.jar remove
+# BFG Repo Cleaner
 bfg-1.15.0.jar
+*.git.bfg-report/
+gesture_SpringBoot_Backend.git/
