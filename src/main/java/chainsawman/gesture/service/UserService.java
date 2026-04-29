@@ -7,6 +7,7 @@ import chainsawman.gesture.entity.media.Media;
 import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.enums.RoomRole;
 import chainsawman.gesture.exceptions.media.MediaNotFoundException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
@@ -43,18 +44,19 @@ public class UserService {
         User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx)
                 .orElseThrow(UserNotFoundException::new);
 
-        String profileUrl = mediaRepository.findByUser_Idx(user.getIdx())
+        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
                 .map(media -> "/media/" + media.getUrl())
                 .orElse(null);
 
         return ProfileResponse.from(user, profileUrl);
+
     }
 
     // 내 프로필 조회
     public MyProfileResponse getMyProfile() {
         User user = securityUtils.getCurrentUser();
 
-        String profileUrl = mediaRepository.findByUser_Idx(user.getIdx())
+        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
                 .map(media -> "/media/" + media.getUrl())
                 .orElse(null);
 
@@ -104,7 +106,7 @@ public class UserService {
         }
         userRepository.save(user);
 
-        Optional<Media> mediaOptional = mediaRepository.findByUser_Idx(user.getIdx());
+        Optional<Media> mediaOptional = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE);
 
         String profileUrl = mediaOptional
                 .map(media -> "/media/" + media.getUrl())
@@ -146,7 +148,7 @@ public class UserService {
                 .map(User::getId)
                 .toList();
 
-        Map<String, String> profileUrlMap = mediaRepository.findByUser_IdIn(userIds)
+        Map<String, String> profileUrlMap = mediaRepository.findByUser_IdInAndEntityType(userIds, MediaEntityType.PROFILE)
                 .stream()
                 .collect(Collectors.toMap(
                         media -> media.getUser().getId(),

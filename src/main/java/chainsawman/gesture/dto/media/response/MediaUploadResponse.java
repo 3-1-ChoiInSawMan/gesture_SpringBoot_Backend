@@ -1,12 +1,26 @@
 package chainsawman.gesture.dto.media.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MediaUploadResponse {
+
     @JsonProperty("file_url")
-    private String fileUrl;
+    private final String fileUrl;
+
+    @JsonProperty("profile_url")
+    private final String profileUrl;
+
+    public MediaUploadResponse(String fileUrl) {
+        this.fileUrl = fileUrl;
+        this.profileUrl = null;
+    }
+
+    public MediaUploadResponse(String fileUrl, String profileUrl) {
+        this.fileUrl = fileUrl;
+        this.profileUrl = profileUrl;
+    }
 }
