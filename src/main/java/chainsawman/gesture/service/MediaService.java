@@ -60,9 +60,6 @@ public class MediaService {
         media.setFile(key);
         mediaRepository.save(media);
 
-        if (type == MediaEntityType.PROFILE) {
-            return new MediaUploadResponse(fileUrl, "/media/" + uuid);
-        }
         return new MediaUploadResponse(fileUrl);
     }
 
