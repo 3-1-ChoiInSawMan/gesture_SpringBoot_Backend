@@ -17,7 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,6 +74,14 @@ public class MediaService {
                 .orElseThrow(MediaNotFoundException::new);
         String fileUrl = amazonS3.getUrl(bucket, media.getFile()).toString();
         return new MediaUrlResponse(fileUrl);
+    }
+
+    public Map<String, String> getMediaUrlMap(Collection<String> uuids) {
+        return mediaRepository.findByUuidIn(uuids).stream()
+                .collect(Collectors.toMap(
+                        Media::getUuid,
+                        media -> amazonS3.getUrl(bucket, media.getFile()).toString()
+                ));
     }
 
     private String getExtension(String filename) {
