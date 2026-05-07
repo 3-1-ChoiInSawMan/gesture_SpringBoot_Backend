@@ -23,7 +23,7 @@ public class Media {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", nullable = false, length = 20)
+    @Column(name = "entity_type", length = 20)
     private MediaEntityType entityType;
 
     @Column(columnDefinition = "TEXT")

@@ -18,7 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,36 +38,47 @@ public class MediaService {
 
     // 파일 업로드
     @Transactional
-    public MediaUploadResponse upload(MultipartFile file, MediaEntityType type) throws IOException {
+    public MediaUploadResponse upload(MultipartFile file) throws IOException {
         User user = securityUtils.getCurrentUser();
         String uuid = UUID.randomUUID().toString();
         String ext = getExtension(file.getOriginalFilename());
-        String key = type.getPrefix() + "/" + user.getIdx() + "/" + uuid + ext;
+        String key = "uploads/" + user.getIdx() + "/" + uuid + ext;
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(file.getContentType());
         metadata.setContentLength(file.getSize());
         amazonS3.putObject(bucket, key, file.getInputStream(), metadata);
 
-        String fileUrl = amazonS3.getUrl(bucket, key).toString();
-
-        if (type == MediaEntityType.PROFILE) {
-            mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                    .ifPresent(existing -> {
-                        amazonS3.deleteObject(bucket, existing.getFile());
-                        mediaRepository.delete(existing);
-                    });
-        }
-
         Media media = new Media();
         media.setUser(user);
-        media.setEntityType(type);
         media.setUuid(uuid);
         media.setName(file.getOriginalFilename());
         media.setFile(key);
         mediaRepository.save(media);
 
-        return new MediaUploadResponse(uuid, fileUrl);
+        return new MediaUploadResponse(uuid, amazonS3.getUrl(bucket, key).toString());
+    }
+
+    // 프로필 이미지 연결 (이전 프로필 삭제 + 새 미디어에 PROFILE 타입 부여)
+    @Transactional
+    public String updateProfileImage(String uuid, User user) {
+        mediaRepository.findFirstByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
+                .ifPresent(existing -> {
+                    amazonS3.deleteObject(bucket, existing.getFile());
+                    mediaRepository.delete(existing);
+                });
+
+        Media media = mediaRepository.findByUuid(uuid)
+                .orElseThrow(MediaNotFoundException::new);
+
+        if (!media.getUser().getIdx().equals(user.getIdx())) {
+            throw new MediaNotFoundException();
+        }
+
+        media.setEntityType(MediaEntityType.PROFILE);
+        mediaRepository.save(media);
+
+        return amazonS3.getUrl(bucket, media.getFile()).toString();
     }
 
     // 파일 URL 조회
@@ -80,6 +93,20 @@ public class MediaService {
         return mediaRepository.findByUuidIn(uuids).stream()
                 .collect(Collectors.toMap(
                         Media::getUuid,
+                        media -> amazonS3.getUrl(bucket, media.getFile()).toString()
+                ));
+    }
+
+    public Optional<String> getProfileImageUrl(Long userIdx) {
+        return mediaRepository.findFirstByUser_IdxAndEntityType(userIdx, MediaEntityType.PROFILE)
+                .map(media -> amazonS3.getUrl(bucket, media.getFile()).toString());
+    }
+
+    public Map<String, String> getProfileImageUrlMap(List<String> userIds) {
+        return mediaRepository.findByUser_IdInAndEntityType(userIds, MediaEntityType.PROFILE)
+                .stream()
+                .collect(Collectors.toMap(
+                        media -> media.getUser().getId(),
                         media -> amazonS3.getUrl(bucket, media.getFile()).toString()
                 ));
     }

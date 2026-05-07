@@ -4,7 +4,6 @@ import chainsawman.gesture.dto.user.request.*;
 import chainsawman.gesture.dto.user.response.*;
 import chainsawman.gesture.entity.user.RefreshToken;
 import chainsawman.gesture.entity.user.User;
-import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.enums.ProviderType;
 import chainsawman.gesture.exceptions.auth.InvalidRefreshTokenException;
 import chainsawman.gesture.exceptions.user.DeactivatedUserException;
@@ -15,7 +14,6 @@ import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.exceptions.user.SocialEmailConflictException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.global.TokenProvider;
-import chainsawman.gesture.repository.media.MediaRepository;
 import chainsawman.gesture.repository.user.RefreshTokenRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,7 +31,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    private final MediaRepository mediaRepository;
+    private final MediaService mediaService;
     private final RefreshTokenRepository refreshTokenRepository;
 
 
@@ -51,9 +49,7 @@ public class AuthService {
 
         saveRefreshToken(user, refreshToken);
 
-        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUuid())
-                .orElse(null);
+        String profileUrl = mediaService.getProfileImageUrl(user.getIdx()).orElse(null);
 
         return LoginResponse.builder()
                 .idx(user.getIdx())
@@ -89,12 +85,17 @@ public class AuthService {
 
         User saved = userRepository.save(user);
 
+        String profileUrl = null;
+        if (request.getProfileImageUuid() != null) {
+            profileUrl = mediaService.updateProfileImage(request.getProfileImageUuid(), saved);
+        }
+
         return RegisterResponse.builder()
                 .idx(saved.getIdx())
                 .id(saved.getId())
                 .email(saved.getEmail())
                 .nickname(saved.getNickname())
-                .profileUrl(null)
+                .profileUrl(profileUrl)
                 .statusMessage(null)
                 .provider(null)
                 .isDeactivated(saved.getIsDeactivated())
@@ -138,9 +139,7 @@ public class AuthService {
     }
 
     private SocialLoginResponse loginSocialUser(User user) {
-        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUuid())
-                .orElse(null);
+        String profileUrl = mediaService.getProfileImageUrl(user.getIdx()).orElse(null);
         String accessToken = tokenProvider.createToken(user.getEmail(), user.getIdx());
         String refreshToken = tokenProvider.createRefreshToken(user.getEmail(), user.getIdx());
         saveRefreshToken(user, refreshToken);
@@ -168,6 +167,10 @@ public class AuthService {
         user.setProviderId(request.getProviderId());
         user.setIsDeactivated(false);
         user = userRepository.save(user);
+
+        if (request.getProfileImageUuid() != null) {
+            mediaService.updateProfileImage(request.getProfileImageUuid(), user);
+        }
 
         String accessToken = tokenProvider.createToken(user.getEmail(), user.getIdx());
         String refreshToken = tokenProvider.createRefreshToken(user.getEmail(), user.getIdx());

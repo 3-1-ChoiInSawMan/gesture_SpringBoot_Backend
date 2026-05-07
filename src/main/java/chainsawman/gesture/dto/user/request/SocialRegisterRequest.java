@@ -28,4 +28,7 @@ public class SocialRegisterRequest {
     @NotBlank(message = "닉네임을 입력해주세요.")
     @JsonProperty("nickname")
     private String nickname;
+
+    @JsonProperty("profile_image_uuid")
+    private String profileImageUuid;
 }

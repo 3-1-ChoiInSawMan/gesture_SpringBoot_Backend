@@ -8,9 +8,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PatchMyProfileRequest {
     private String nickname;
-    @JsonProperty("profile_url")
-    private String profileUrl;
+    @JsonProperty("profile_image_uuid")
+    private String profileImageUuid;
     @JsonProperty("status_message")
     private String statusMessage;
-
 }

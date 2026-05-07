@@ -33,6 +33,7 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
+    private final MediaService mediaService;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
 
@@ -46,12 +47,18 @@ public class RoomService {
         }
 
         Room room = new Room();
+        String thumbnailUrl = null;
+        if (request.getThumbnailUuid() != null) {
+            thumbnailUrl = mediaService.getMediaUrl(request.getThumbnailUuid()).getFileUrl();
+        }
+
         room.setHost(currentUser);
         room.setTitle(request.getTitle());
         room.setCategory(parseCategory(request.getCategory()));
         room.setMaxParticipant(request.getMaxParticipant());
         room.setPublic(request.isPublicRoom());
         room.setPassword(encodedPassword);
+        room.setThumbnailUrl(thumbnailUrl);
         roomRepository.save(room);
 
         RoomMember hostMember = new RoomMember();
@@ -137,6 +144,9 @@ public class RoomService {
             room.setPassword(passwordEncoder.encode(request.getPassword()));
         } else if (Boolean.TRUE.equals(request.getPublicRoom())) {
             room.setPassword(null);
+        }
+        if (request.getThumbnailUuid() != null) {
+            room.setThumbnailUrl(mediaService.getMediaUrl(request.getThumbnailUuid()).getFileUrl());
         }
         roomRepository.save(room);
 
