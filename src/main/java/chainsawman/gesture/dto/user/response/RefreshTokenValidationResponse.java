@@ -1,16 +1,17 @@
 package chainsawman.gesture.dto.user.response;
 
 import chainsawman.gesture.entity.user.User;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
-
 @Getter
-@AllArgsConstructor
+@Builder
 public class RefreshTokenValidationResponse {
     private Long idx;
 
     public static RefreshTokenValidationResponse from(User user) {
-        return new RefreshTokenValidationResponse(user.getIdx());
+        return RefreshTokenValidationResponse.builder()
+                .idx(user.getIdx())
+                .build();
     }
 }

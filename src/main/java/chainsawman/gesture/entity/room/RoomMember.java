@@ -3,6 +3,8 @@ package chainsawman.gesture.entity.room;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.RoomRole;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +18,9 @@ import java.time.LocalDateTime;
         indexes = @Index(name = "idx_room_members_room", columnList = "room_idx"))
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class RoomMember {
 

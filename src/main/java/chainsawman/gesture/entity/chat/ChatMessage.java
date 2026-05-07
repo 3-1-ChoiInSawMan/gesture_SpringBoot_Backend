@@ -4,6 +4,8 @@ import chainsawman.gesture.entity.media.Media;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.MessageType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +19,9 @@ import java.time.LocalDateTime;
         indexes = @Index(name = "idx_chat_messages_chat_created", columnList = "chat_idx, created_at"))
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class ChatMessage {
 

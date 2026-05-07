@@ -10,6 +10,7 @@ import chainsawman.gesture.entity.quick.QuickSlotPreset;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.quickslot.QuickSlotLimitExceededException;
 import chainsawman.gesture.exceptions.quickslot.QuickSlotNotFoundException;
+import chainsawman.gesture.exceptions.quickslot.QuickSlotPresetLimitExceededException;
 import chainsawman.gesture.repository.quick.QuickSlotPresetRepository;
 import chainsawman.gesture.repository.quick.QuickSlotRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -66,7 +67,7 @@ class QuickSlotServiceTest {
 
         given(quickSlotRepository.countByUserAndDeletedAtIsNull(user)).willReturn(0L);
         given(quickSlotRepository.findOrdersByUser(user)).willReturn(Set.of(0, 1, 2));
-        given(mediaService.getMediaUrl("uuid-icon-1")).willReturn(new MediaUrlResponse("https://s3.example.com/icon.png"));
+        given(mediaService.getMediaUrl("uuid-icon-1")).willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/icon.png").build());
 
         ArgumentCaptor<QuickSlot> captor = ArgumentCaptor.forClass(QuickSlot.class);
         given(quickSlotRepository.save(captor.capture())).willAnswer(inv -> {
@@ -94,7 +95,7 @@ class QuickSlotServiceTest {
     void createQuickSlot_firstSlot_orderZero() {
         given(quickSlotRepository.countByUserAndDeletedAtIsNull(user)).willReturn(0L);
         given(quickSlotRepository.findOrdersByUser(user)).willReturn(Set.of());
-        given(mediaService.getMediaUrl(anyString())).willReturn(new MediaUrlResponse("https://s3.example.com/icon.png"));
+        given(mediaService.getMediaUrl(anyString())).willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/icon.png").build());
 
         ArgumentCaptor<QuickSlot> captor = ArgumentCaptor.forClass(QuickSlot.class);
         given(quickSlotRepository.save(captor.capture())).willAnswer(inv -> {
@@ -130,7 +131,7 @@ class QuickSlotServiceTest {
     void updateQuickSlots_existingPreset() {
         List<Long> ids = List.of(1L, 2L, 3L);
         List<QuickSlot> slots = makeSlots(1L, 2L, 3L);
-        QuickSlotPreset preset = QuickSlotPreset.create(user);
+        QuickSlotPreset preset = QuickSlotPreset.builder().user(user).build();
         LocalDateTime updatedAt = LocalDateTime.now();
 
         given(quickSlotRepository.findByIdxInAndUserAndDeletedAtIsNull(ids, user)).willReturn(slots);
@@ -167,6 +168,18 @@ class QuickSlotServiceTest {
 
         assertThat(response.getQuickSlots()).hasSize(1);
         verify(quickSlotPresetRepository).save(any(QuickSlotPreset.class));
+    }
+
+    @Test
+    @DisplayName("활성 프리셋 등록 - 6개 이상 요청 시 QuickSlotPresetLimitExceededException")
+    void updateQuickSlots_presetLimitExceeded() {
+        List<Long> ids = List.of(1L, 2L, 3L, 4L, 5L, 6L);
+
+        assertThatThrownBy(() -> quickSlotService.updateQuickSlots(new UpdateQuickSlotRequest(ids)))
+                .isInstanceOf(QuickSlotPresetLimitExceededException.class);
+
+        verify(quickSlotRepository, never()).findByIdxInAndUserAndDeletedAtIsNull(any(), any());
+        verify(quickSlotPresetRepository, never()).save(any());
     }
 
     @Test
@@ -224,7 +237,7 @@ class QuickSlotServiceTest {
     @Test
     @DisplayName("프리셋 조회 - 활성 슬롯과 아이콘 URL 반환")
     void getPreset_withActiveSlots() {
-        QuickSlotPreset preset = QuickSlotPreset.create(user);
+        QuickSlotPreset preset = QuickSlotPreset.builder().user(user).build();
         QuickSlot slot = makeSlot(10L, "uuid-x");
         preset.updateSlots(List.of(slot));
         LocalDateTime updatedAt = LocalDateTime.now();
@@ -263,7 +276,7 @@ class QuickSlotServiceTest {
         PatchQuickSlotRequest request = new PatchQuickSlotRequest("새이름", "새설명", "new-uuid");
 
         given(quickSlotRepository.findByIdxAndUserAndDeletedAtIsNull(5L, user)).willReturn(Optional.of(slot));
-        given(mediaService.getMediaUrl("new-uuid")).willReturn(new MediaUrlResponse("https://s3.example.com/new.png"));
+        given(mediaService.getMediaUrl("new-uuid")).willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/new.png").build());
 
         QuickSlotListResponse response = quickSlotService.patchQuickSlot(5L, request);
 
@@ -281,7 +294,7 @@ class QuickSlotServiceTest {
         PatchQuickSlotRequest request = new PatchQuickSlotRequest(null, "새설명", null);
 
         given(quickSlotRepository.findByIdxAndUserAndDeletedAtIsNull(5L, user)).willReturn(Optional.of(slot));
-        given(mediaService.getMediaUrl("old-uuid")).willReturn(new MediaUrlResponse("https://s3.example.com/old.png"));
+        given(mediaService.getMediaUrl("old-uuid")).willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/old.png").build());
 
         QuickSlotListResponse response = quickSlotService.patchQuickSlot(5L, request);
 
@@ -322,7 +335,7 @@ class QuickSlotServiceTest {
     @DisplayName("퀵슬롯 삭제 - 프리셋에 포함된 슬롯이면 프리셋에서도 제거")
     void deleteQuickSlot_removesFromPreset() {
         QuickSlot slot = makeSlot(7L, "uuid-del");
-        QuickSlotPreset preset = QuickSlotPreset.create(user);
+        QuickSlotPreset preset = QuickSlotPreset.builder().user(user).build();
         preset.updateSlots(List.of(slot));
 
         given(quickSlotRepository.findByIdxAndUserAndDeletedAtIsNull(7L, user)).willReturn(Optional.of(slot));

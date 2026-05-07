@@ -2,6 +2,8 @@ package chainsawman.gesture.entity.user;
 
 import chainsawman.gesture.enums.ProviderType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +17,9 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
@@ -53,6 +57,7 @@ public class User {
     @Column(name = "provider_id", length = 255, unique = true)
     private String providerId;
 
+    @Builder.Default
     @Column(name = "is_deactivated", nullable = false)
     private Boolean isDeactivated = false;
 }

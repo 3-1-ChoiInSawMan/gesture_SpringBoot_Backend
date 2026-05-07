@@ -2,6 +2,8 @@ package chainsawman.gesture.entity.call;
 
 import chainsawman.gesture.entity.user.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +16,9 @@ import java.time.LocalDateTime;
 @Table(name = "call_participants")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class CallParticipant {
 

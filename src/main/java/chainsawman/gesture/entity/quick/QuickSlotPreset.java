@@ -2,6 +2,8 @@ package chainsawman.gesture.entity.quick;
 
 import chainsawman.gesture.entity.user.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -16,7 +18,9 @@ import java.util.stream.Stream;
 @Entity
 @Table(name = "quick_slot_presets")
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class QuickSlotPreset {
 
@@ -51,12 +55,6 @@ public class QuickSlotPreset {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    public static QuickSlotPreset create(User user) {
-        QuickSlotPreset preset = new QuickSlotPreset();
-        preset.user = user;
-        return preset;
-    }
 
     public void updateSlots(List<QuickSlot> slots) {
         this.slot1 = slots.size() > 0 ? slots.get(0) : null;

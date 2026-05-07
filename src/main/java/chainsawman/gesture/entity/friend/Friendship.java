@@ -3,6 +3,8 @@ package chainsawman.gesture.entity.friend;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.FriendshipStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +17,9 @@ import java.time.LocalDateTime;
 @Table(name = "friendships")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Friendship {
 
@@ -33,6 +37,7 @@ public class Friendship {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private FriendshipStatus status = FriendshipStatus.PENDING;
 
     @CreatedDate

@@ -77,13 +77,12 @@ public class AuthService {
             throw new DuplicateIdException();
         }
 
-        User user = new User();
-        user.setId(request.getId());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setNickname(request.getNickname());
-
-        User saved = userRepository.save(user);
+        User saved = userRepository.save(User.builder()
+                .id(request.getId())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .nickname(request.getNickname())
+                .build());
 
         String profileUrl = null;
         if (request.getProfileImageUuid() != null) {
@@ -159,14 +158,14 @@ public class AuthService {
             throw new DuplicateSocialAccountException();
         }
 
-        User user = new User();
-        user.setId(request.getId());
-        user.setEmail(request.getEmail());
-        user.setNickname(request.getNickname());
-        user.setProvider(provider);
-        user.setProviderId(request.getProviderId());
-        user.setIsDeactivated(false);
-        user = userRepository.save(user);
+        User user = userRepository.save(User.builder()
+                .id(request.getId())
+                .email(request.getEmail())
+                .nickname(request.getNickname())
+                .provider(provider)
+                .providerId(request.getProviderId())
+                .isDeactivated(false)
+                .build());
 
         if (request.getProfileImageUuid() != null) {
             mediaService.updateProfileImage(request.getProfileImageUuid(), user);
@@ -212,7 +211,11 @@ public class AuthService {
 
         refreshTokenRepository.findByUser_Idx(user.getIdx()).ifPresentOrElse(
                 existing -> existing.update(refreshToken, expiresAt),
-                () -> refreshTokenRepository.save(new RefreshToken(user, refreshToken, expiresAt))
+                () -> refreshTokenRepository.save(RefreshToken.builder()
+                        .user(user)
+                        .token(refreshToken)
+                        .expiresAt(expiresAt)
+                        .build())
         );
     }
 }

@@ -49,14 +49,17 @@ public class MediaService {
         metadata.setContentLength(file.getSize());
         amazonS3.putObject(bucket, key, file.getInputStream(), metadata);
 
-        Media media = new Media();
-        media.setUser(user);
-        media.setUuid(uuid);
-        media.setName(file.getOriginalFilename());
-        media.setFile(key);
-        mediaRepository.save(media);
+        Media media = mediaRepository.save(Media.builder()
+                .user(user)
+                .uuid(uuid)
+                .name(file.getOriginalFilename())
+                .file(key)
+                .build());
 
-        return new MediaUploadResponse(uuid, amazonS3.getUrl(bucket, key).toString());
+        return MediaUploadResponse.builder()
+                .mediaUuid(uuid)
+                .fileUrl(amazonS3.getUrl(bucket, key).toString())
+                .build();
     }
 
     // 프로필 이미지 연결 (이전 프로필 삭제 + 새 미디어에 PROFILE 타입 부여)
@@ -86,7 +89,7 @@ public class MediaService {
         Media media = mediaRepository.findByUuid(uuid)
                 .orElseThrow(MediaNotFoundException::new);
         String fileUrl = amazonS3.getUrl(bucket, media.getFile()).toString();
-        return new MediaUrlResponse(fileUrl);
+        return MediaUrlResponse.builder().fileUrl(fileUrl).build();
     }
 
     public Map<String, String> getMediaUrlMap(Collection<String> uuids) {

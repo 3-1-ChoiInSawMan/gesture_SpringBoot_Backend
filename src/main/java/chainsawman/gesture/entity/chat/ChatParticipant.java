@@ -2,6 +2,8 @@ package chainsawman.gesture.entity.chat;
 
 import chainsawman.gesture.entity.user.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +17,9 @@ import lombok.Setter;
         indexes = @Index(name = "idx_chat_participants_chat", columnList = "chat_idx"))
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ChatParticipant {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

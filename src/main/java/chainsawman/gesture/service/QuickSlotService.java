@@ -13,6 +13,7 @@ import chainsawman.gesture.entity.quick.QuickSlotPreset;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.quickslot.QuickSlotLimitExceededException;
 import chainsawman.gesture.exceptions.quickslot.QuickSlotNotFoundException;
+import chainsawman.gesture.exceptions.quickslot.QuickSlotPresetLimitExceededException;
 import chainsawman.gesture.repository.quick.QuickSlotPresetRepository;
 import chainsawman.gesture.repository.quick.QuickSlotRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -76,6 +77,10 @@ public class QuickSlotService {
         User user = securityUtils.getCurrentUser();
         List<Long> ids = request.getQuickSlotIds();
 
+        if (ids.size() > MAX_PRESET_COUNT) {
+            throw new QuickSlotPresetLimitExceededException();
+        }
+
         List<QuickSlot> slots = quickSlotRepository.findByIdxInAndUserAndDeletedAtIsNull(ids, user);
         if (slots.size() != ids.size()) {
             throw new QuickSlotNotFoundException();
@@ -88,7 +93,7 @@ public class QuickSlotService {
                 .collect(Collectors.toList());
 
         QuickSlotPreset preset = quickSlotPresetRepository.findByUser(user)
-                .orElseGet(() -> QuickSlotPreset.create(user));
+                .orElseGet(() -> QuickSlotPreset.builder().user(user).build());
         preset.updateSlots(orderedSlots);
         QuickSlotPreset saved = quickSlotPresetRepository.save(preset);
 

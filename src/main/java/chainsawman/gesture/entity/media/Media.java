@@ -3,6 +3,8 @@ package chainsawman.gesture.entity.media;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.MediaEntityType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +13,9 @@ import lombok.Setter;
 @Table(name = "media")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Media {
 
     @Id

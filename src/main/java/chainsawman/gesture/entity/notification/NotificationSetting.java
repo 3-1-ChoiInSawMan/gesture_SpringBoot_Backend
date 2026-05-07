@@ -3,6 +3,8 @@ package chainsawman.gesture.entity.notification;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.NotificationType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +17,9 @@ import java.time.LocalDateTime;
 @Table(name = "notification_settings")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class NotificationSetting {
 
@@ -31,6 +35,7 @@ public class NotificationSetting {
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
+    @Builder.Default
     @Column(name = "is_used", nullable = false)
     private boolean isUsed = true;
 

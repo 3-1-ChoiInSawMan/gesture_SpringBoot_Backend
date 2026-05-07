@@ -47,17 +47,14 @@ public class NotificationService {
                     .orElseThrow(UserNotFoundException::new);
         }
 
-        Notification notification = new Notification();
-        notification.setUser(receiver);
-        notification.setActor(actor);
-        notification.setType(type);
-        notification.setContent(generateContent(type, actor));
-        notification.setRead(false);
-        if (request.getTargetId() != null) {
-            notification.setTargetId(String.valueOf(request.getTargetId()));
-        }
-
-        notificationRepository.save(notification);
+        Notification notification = notificationRepository.save(Notification.builder()
+                .user(receiver)
+                .actor(actor)
+                .type(type)
+                .content(generateContent(type, actor))
+                .isRead(false)
+                .targetId(request.getTargetId() != null ? String.valueOf(request.getTargetId()) : null)
+                .build());
 
         return NotificationCreateResponse.from(notification);
     }
@@ -116,11 +113,11 @@ public class NotificationService {
     }
 
     private NotificationSetting createDefaultSetting(User user, NotificationType type) {
-        NotificationSetting setting = new NotificationSetting();
-        setting.setUser(user);
-        setting.setType(type);
-        setting.setUsed(true);
-        return notificationSettingRepository.save(setting);
+        return notificationSettingRepository.save(NotificationSetting.builder()
+                .user(user)
+                .type(type)
+                .isUsed(true)
+                .build());
     }
 
     private String generateContent(NotificationType type, User actor) {

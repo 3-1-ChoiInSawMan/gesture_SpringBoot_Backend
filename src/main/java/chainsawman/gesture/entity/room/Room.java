@@ -3,6 +3,8 @@ package chainsawman.gesture.entity.room;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.RoomType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +19,9 @@ import java.time.LocalDateTime;
         indexes = @Index(name = "idx_rooms_public_created", columnList = "is_public, created_at"))
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Room {
 
@@ -35,6 +39,7 @@ public class Room {
     @Column(name = "max_participant", nullable = false)
     private int maxParticipant;
 
+    @Builder.Default
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 

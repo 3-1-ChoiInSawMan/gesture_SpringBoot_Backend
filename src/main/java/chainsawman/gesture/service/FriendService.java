@@ -40,11 +40,10 @@ public class FriendService {
         User receiver = userRepository.findByIdxAndIsDeactivatedFalse(receiverIdx)
                 .orElseThrow(UserNotFoundException::new);
 
-        Friendship friendship = new Friendship();
-        friendship.setUser(requester);
-        friendship.setFriend(receiver);
-        friendship.setStatus(FriendshipStatus.PENDING);
-        friendshipRepository.save(friendship);
+        Friendship friendship = friendshipRepository.save(Friendship.builder()
+                .user(requester)
+                .friend(receiver)
+                .build());
 
         return FriendRequestSendResponse.from(friendship);
     }

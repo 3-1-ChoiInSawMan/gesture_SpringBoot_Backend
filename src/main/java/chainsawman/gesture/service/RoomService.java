@@ -46,26 +46,26 @@ public class RoomService {
             encodedPassword = passwordEncoder.encode(request.getPassword());
         }
 
-        Room room = new Room();
         String thumbnailUrl = null;
         if (request.getThumbnailUuid() != null) {
             thumbnailUrl = mediaService.getMediaUrl(request.getThumbnailUuid()).getFileUrl();
         }
 
-        room.setHost(currentUser);
-        room.setTitle(request.getTitle());
-        room.setCategory(parseCategory(request.getCategory()));
-        room.setMaxParticipant(request.getMaxParticipant());
-        room.setPublic(request.isPublicRoom());
-        room.setPassword(encodedPassword);
-        room.setThumbnailUrl(thumbnailUrl);
-        roomRepository.save(room);
+        Room room = roomRepository.save(Room.builder()
+                .host(currentUser)
+                .title(request.getTitle())
+                .category(parseCategory(request.getCategory()))
+                .maxParticipant(request.getMaxParticipant())
+                .isPublic(request.isPublicRoom())
+                .password(encodedPassword)
+                .thumbnailUrl(thumbnailUrl)
+                .build());
 
-        RoomMember hostMember = new RoomMember();
-        hostMember.setRoom(room);
-        hostMember.setUser(currentUser);
-        hostMember.setRole(RoomRole.HOST);
-        roomMemberRepository.save(hostMember);
+        RoomMember hostMember = roomMemberRepository.save(RoomMember.builder()
+                .room(room)
+                .user(currentUser)
+                .role(RoomRole.HOST)
+                .build());
 
         return RoomResponse.builder()
                 .roomIdx(room.getIdx())
@@ -207,11 +207,11 @@ public class RoomService {
             }
         }
 
-        RoomMember member = new RoomMember();
-        member.setRoom(room);
-        member.setUser(currentUser);
-        member.setRole(RoomRole.MEMBER);
-        roomMemberRepository.save(member);
+        RoomMember member = roomMemberRepository.save(RoomMember.builder()
+                .room(room)
+                .user(currentUser)
+                .role(RoomRole.MEMBER)
+                .build());
 
         return RoomJoinResponse.builder()
                 .roomMemberIdx(member.getIdx())

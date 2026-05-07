@@ -80,7 +80,7 @@ class RoomServiceTest {
         RoomRequest request = new RoomRequest("제목", "STUDY", 5, true, null, "thumb-uuid");
 
         given(mediaService.getMediaUrl("thumb-uuid"))
-                .willReturn(new MediaUrlResponse("https://s3.example.com/thumb.jpg"));
+                .willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/thumb.jpg").build());
         given(roomRepository.save(any(Room.class))).willAnswer(inv -> {
             Room r = inv.getArgument(0);
             ReflectionTestUtils.setField(r, "idx", 10L);
@@ -124,7 +124,7 @@ class RoomServiceTest {
         given(roomRepository.findById(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.countByRoom_Idx(1L)).willReturn(2);
         given(mediaService.getMediaUrl("new-thumb"))
-                .willReturn(new MediaUrlResponse("https://s3.example.com/new.jpg"));
+                .willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/new.jpg").build());
         given(roomRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         RoomPatchResponse response = roomService.patchRoom(1L, request);
