@@ -19,4 +19,7 @@ public class RoomPatchRequest {
     private Boolean publicRoom;
 
     private String password;
+
+    @JsonProperty("thumbnail_uuid")
+    private String thumbnailUuid;
 }

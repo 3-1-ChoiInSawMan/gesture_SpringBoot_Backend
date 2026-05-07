@@ -20,5 +20,6 @@ public class RoomRequest {
 
     private String password;
 
-
+    @JsonProperty("thumbnail_uuid")
+    private String thumbnailUuid;
 }

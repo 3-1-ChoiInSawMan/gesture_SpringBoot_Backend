@@ -14,7 +14,7 @@ public interface MediaRepository extends JpaRepository<Media, Long> {
 
     List<Media> findByUuidIn(Collection<String> uuids);
 
-    Optional<Media> findByUser_IdxAndEntityType(Long userIdx, MediaEntityType entityType);
+    Optional<Media> findFirstByUser_IdxAndEntityType(Long userIdx, MediaEntityType entityType);
 
     List<Media> findByUser_IdInAndEntityType(List<String> ids, MediaEntityType entityType);
 }

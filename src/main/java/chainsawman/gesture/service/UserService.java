@@ -3,16 +3,12 @@ package chainsawman.gesture.service;
 import chainsawman.gesture.dto.user.request.PatchMyProfileRequest;
 import chainsawman.gesture.dto.user.request.PatchPasswordRequest;
 import chainsawman.gesture.dto.user.response.*;
-import chainsawman.gesture.entity.media.Media;
 import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
-import chainsawman.gesture.enums.MediaEntityType;
 import chainsawman.gesture.enums.RoomRole;
-import chainsawman.gesture.exceptions.media.MediaNotFoundException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
-import chainsawman.gesture.repository.media.MediaRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
@@ -25,15 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-    private final MediaRepository mediaRepository;
+    private final MediaService mediaService;
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final SecurityUtils securityUtils;
@@ -44,9 +38,7 @@ public class UserService {
         User user = userRepository.findByIdxAndIsDeactivatedFalse(userIdx)
                 .orElseThrow(UserNotFoundException::new);
 
-        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUuid())
-                .orElse(null);
+        String profileUrl = mediaService.getProfileImageUrl(user.getIdx()).orElse(null);
 
         return ProfileResponse.from(user, profileUrl);
 
@@ -56,9 +48,7 @@ public class UserService {
     public MyProfileResponse getMyProfile() {
         User user = securityUtils.getCurrentUser();
 
-        String profileUrl = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE)
-                .map(media -> "/media/" + media.getUuid())
-                .orElse(null);
+        String profileUrl = mediaService.getProfileImageUrl(user.getIdx()).orElse(null);
 
         return MyProfileResponse.from(user, profileUrl);
     }
@@ -106,18 +96,11 @@ public class UserService {
         }
         userRepository.save(user);
 
-        Optional<Media> mediaOptional = mediaRepository.findByUser_IdxAndEntityType(user.getIdx(), MediaEntityType.PROFILE);
-
-        String profileUrl = mediaOptional
-                .map(media -> "/media/" + media.getUuid())
-                .orElse(null);
-
-        if (request.getProfileUrl() != null) {
-            Media media = mediaOptional.orElseThrow(MediaNotFoundException::new);
-            media.setUuid(request.getProfileUrl());
-            mediaRepository.save(media);
-            profileUrl = "/media/" + request.getProfileUrl();
+        if (request.getProfileImageUuid() != null) {
+            mediaService.updateProfileImage(request.getProfileImageUuid(), user);
         }
+
+        String profileUrl = mediaService.getProfileImageUrl(user.getIdx()).orElse(null);
 
         return PatchMyProfileResponse.from(user, profileUrl);
     }
@@ -148,12 +131,7 @@ public class UserService {
                 .map(User::getId)
                 .toList();
 
-        Map<String, String> profileUrlMap = mediaRepository.findByUser_IdInAndEntityType(userIds, MediaEntityType.PROFILE)
-                .stream()
-                .collect(Collectors.toMap(
-                        media -> media.getUser().getId(),
-                        media -> "/media/" + media.getUuid()
-                ));
+        Map<String, String> profileUrlMap = mediaService.getProfileImageUrlMap(userIds);
         // 매핑
         return users.stream()
                 .map(user -> UserResponse.from(user, profileUrlMap.get(user.getId())))
