@@ -130,6 +130,7 @@ public class NotificationService {
             case CALL_ROOM -> actorInfo + "님이 통화방에 초대했습니다.";
             case CHAT_NOTICE -> actorInfo + "님이 메시지를 보냈습니다.";
             case MENTION -> actorInfo + "님이 회원님을 멘션했습니다.";
+            case CHAT_ROOM_INVITATION -> actorInfo + "님이 채팅방에 초대했습니다.";
             case SERVICE_NOTICE -> "서비스 공지사항이 있습니다.";
         };
     }

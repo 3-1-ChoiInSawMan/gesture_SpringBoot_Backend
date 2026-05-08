@@ -1,5 +1,6 @@
 package chainsawman.gesture.entity.room;
 
+import chainsawman.gesture.entity.chat.ChatRoom;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.RoomType;
 import jakarta.persistence.*;
@@ -32,6 +33,10 @@ public class Room {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_idx", nullable = false)
     private User host;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_room_idx")
+    private ChatRoom chatRoom;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
