@@ -21,6 +21,13 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/check-id")
+    @Operation(summary = "유저 아이디 중복 확인", description = "유저 아이디 중복 확인 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<CheckUserIdResponse>> checkUserId(@RequestParam String userId) {
+        CheckUserIdResponse result = userService.checkUserId(userId);
+        return ResponseEntity.ok(ApiResponse.ok(result, "사용 가능한 아이디 입니다."));
+    }
+
     @GetMapping("/{userIdx}")
     @Operation(summary = "프로필 조회", description = "유저 프로필 조회 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<ProfileResponse>> getProfile(@PathVariable Long userIdx) {

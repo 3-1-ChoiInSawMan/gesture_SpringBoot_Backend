@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByProviderAndProviderId(ProviderType provider, String providerId);
 
+
     // 유저 검색
     List<User> findByIdContainingIgnoreCaseAndIsDeactivatedFalse(String id);
     boolean existsByEmail(String email);

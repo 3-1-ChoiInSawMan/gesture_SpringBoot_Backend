@@ -7,6 +7,7 @@ import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.RoomRole;
+import chainsawman.gesture.exceptions.user.DuplicateIdException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
@@ -14,6 +15,7 @@ import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,16 @@ public class UserService {
     private final RoomMemberRepository roomMemberRepository;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
+
+    // 유저 아이디 중복 확인
+    public CheckUserIdResponse checkUserId(String userId) {
+        // 중복 확인
+        if (userRepository.existsById(userId)) {
+            throw new DuplicateIdException();
+        }
+        // 사용 가능 true
+        return new CheckUserIdResponse(true);
+    }
 
     // 프로필 조회
     public ProfileResponse getProfile(Long userIdx) {
