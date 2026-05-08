@@ -12,6 +12,9 @@ public class RoomResponse {
     @JsonProperty("room_idx")
     private Long roomIdx;
 
+    @JsonProperty("chat_room_idx")
+    private Long chatRoomIdx;
+
     private String title;
     private String category;
 

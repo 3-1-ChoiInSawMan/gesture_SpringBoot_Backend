@@ -30,6 +30,9 @@ public class ChatRoom {
     @Column(nullable = false, length = 1000)
     private String name;
 
+    @Column(name = "image_uuid", length = 100)
+    private String imageUuid;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

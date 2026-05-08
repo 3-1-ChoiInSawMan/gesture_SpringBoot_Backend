@@ -5,11 +5,15 @@ import chainsawman.gesture.dto.room.request.RoomPatchRequest;
 import chainsawman.gesture.dto.room.request.RoomRequest;
 import chainsawman.gesture.dto.room.response.RoomPatchResponse;
 import chainsawman.gesture.dto.room.response.RoomResponse;
+import chainsawman.gesture.entity.chat.ChatParticipant;
+import chainsawman.gesture.entity.chat.ChatRoom;
 import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.media.MediaNotFoundException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
+import chainsawman.gesture.repository.chat.ChatParticipantRepository;
+import chainsawman.gesture.repository.chat.ChatRoomRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -38,6 +42,8 @@ class RoomServiceTest {
 
     @Mock RoomRepository roomRepository;
     @Mock RoomMemberRepository roomMemberRepository;
+    @Mock ChatRoomRepository chatRoomRepository;
+    @Mock ChatParticipantRepository chatParticipantRepository;
     @Mock MediaService mediaService;
     @Mock SecurityUtils securityUtils;
     @Mock PasswordEncoder passwordEncoder;
@@ -60,6 +66,12 @@ class RoomServiceTest {
     void createRoom_no_thumbnail() {
         RoomRequest request = new RoomRequest("제목", "STUDY", 5, true, null, null);
 
+        given(chatRoomRepository.save(any(ChatRoom.class))).willAnswer(inv -> {
+            ChatRoom cr = inv.getArgument(0);
+            ReflectionTestUtils.setField(cr, "idx", 1L);
+            return cr;
+        });
+        given(chatParticipantRepository.save(any(ChatParticipant.class))).willAnswer(inv -> inv.getArgument(0));
         given(roomRepository.save(any(Room.class))).willAnswer(inv -> {
             Room r = inv.getArgument(0);
             ReflectionTestUtils.setField(r, "idx", 10L);
@@ -81,6 +93,12 @@ class RoomServiceTest {
 
         given(mediaService.getMediaUrl("thumb-uuid"))
                 .willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/thumb.jpg").build());
+        given(chatRoomRepository.save(any(ChatRoom.class))).willAnswer(inv -> {
+            ChatRoom cr = inv.getArgument(0);
+            ReflectionTestUtils.setField(cr, "idx", 1L);
+            return cr;
+        });
+        given(chatParticipantRepository.save(any(ChatParticipant.class))).willAnswer(inv -> inv.getArgument(0));
         given(roomRepository.save(any(Room.class))).willAnswer(inv -> {
             Room r = inv.getArgument(0);
             ReflectionTestUtils.setField(r, "idx", 10L);

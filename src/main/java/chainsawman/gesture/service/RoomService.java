@@ -4,6 +4,8 @@ import chainsawman.gesture.dto.room.request.RoomJoinRequest;
 import chainsawman.gesture.dto.room.request.RoomPatchRequest;
 import chainsawman.gesture.dto.room.request.RoomRequest;
 import chainsawman.gesture.dto.room.response.*;
+import chainsawman.gesture.entity.chat.ChatParticipant;
+import chainsawman.gesture.entity.chat.ChatRoom;
 import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
@@ -14,6 +16,8 @@ import chainsawman.gesture.exceptions.room.RoomFullException;
 import chainsawman.gesture.exceptions.room.RoomMaxParticipantExceededException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
+import chainsawman.gesture.repository.chat.ChatParticipantRepository;
+import chainsawman.gesture.repository.chat.ChatRoomRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -33,6 +37,8 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatParticipantRepository chatParticipantRepository;
     private final MediaService mediaService;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
@@ -51,6 +57,15 @@ public class RoomService {
             thumbnailUrl = mediaService.getMediaUrl(request.getThumbnailUuid()).getFileUrl();
         }
 
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
+                .name(request.getTitle())
+                .build());
+
+        chatParticipantRepository.save(ChatParticipant.builder()
+                .chatRoom(chatRoom)
+                .user(currentUser)
+                .build());
+
         Room room = roomRepository.save(Room.builder()
                 .host(currentUser)
                 .title(request.getTitle())
@@ -59,9 +74,10 @@ public class RoomService {
                 .isPublic(request.isPublicRoom())
                 .password(encodedPassword)
                 .thumbnailUrl(thumbnailUrl)
+                .chatRoom(chatRoom)
                 .build());
 
-        RoomMember hostMember = roomMemberRepository.save(RoomMember.builder()
+        roomMemberRepository.save(RoomMember.builder()
                 .room(room)
                 .user(currentUser)
                 .role(RoomRole.HOST)
@@ -69,6 +85,7 @@ public class RoomService {
 
         return RoomResponse.builder()
                 .roomIdx(room.getIdx())
+                .chatRoomIdx(chatRoom.getIdx())
                 .title(room.getTitle())
                 .category(categoryName(room.getCategory()))
                 .maxParticipant(room.getMaxParticipant())
@@ -212,6 +229,13 @@ public class RoomService {
                 .user(currentUser)
                 .role(RoomRole.MEMBER)
                 .build());
+
+        if (room.getChatRoom() != null) {
+            chatParticipantRepository.save(ChatParticipant.builder()
+                    .chatRoom(room.getChatRoom())
+                    .user(currentUser)
+                    .build());
+        }
 
         return RoomJoinResponse.builder()
                 .roomMemberIdx(member.getIdx())
