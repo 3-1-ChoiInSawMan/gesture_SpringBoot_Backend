@@ -3,6 +3,7 @@ package chainsawman.gesture.service;
 import chainsawman.gesture.dto.media.response.MediaUrlResponse;
 import chainsawman.gesture.dto.room.request.RoomPatchRequest;
 import chainsawman.gesture.dto.room.request.RoomRequest;
+import chainsawman.gesture.dto.room.response.RoomLeaveResponse;
 import chainsawman.gesture.dto.room.response.RoomPatchResponse;
 import chainsawman.gesture.dto.room.response.RoomResponse;
 import chainsawman.gesture.entity.chat.ChatParticipant;
@@ -10,7 +11,9 @@ import chainsawman.gesture.entity.chat.ChatRoom;
 import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
+import chainsawman.gesture.enums.RoomRole;
 import chainsawman.gesture.exceptions.media.MediaNotFoundException;
+import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
@@ -174,5 +177,118 @@ class RoomServiceTest {
 
         assertThatThrownBy(() -> roomService.patchRoom(99L, new RoomPatchRequest(null, null, 0, null, null, null)))
                 .isInstanceOf(RoomNotFoundException.class);
+    }
+
+    // ─── leaveRoom ────────────────────────────────
+
+    @Test
+    @DisplayName("통화방 나가기 - 일반 멤버가 나가면 deleted false, newHostIdx null")
+    void leaveRoom_member() {
+        Room room = buildRoom(1L, user, null);
+        RoomMember member = buildMember(user, RoomRole.MEMBER);
+
+        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(member));
+
+        RoomLeaveResponse response = roomService.leaveRoom(1L);
+
+        assertThat(response.isDeleted()).isFalse();
+        assertThat(response.getNewHostIdx()).isNull();
+        verify(roomMemberRepository).deleteByRoom_IdxAndUser_Idx(1L, 1L);
+        verify(roomRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("통화방 나가기 - 방장이 나가고 다음 멤버 있으면 방장 위임")
+    void leaveRoom_host_delegates() {
+        User nextUser = new User();
+        ReflectionTestUtils.setField(nextUser, "idx", 2L);
+
+        Room room = buildRoom(1L, user, null);
+        RoomMember hostMember = buildMember(user, RoomRole.HOST);
+        RoomMember nextMember = buildMember(nextUser, RoomRole.MEMBER);
+
+        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(hostMember));
+        given(roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(1L, 1L))
+                .willReturn(Optional.of(nextMember));
+        given(roomMemberRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(roomRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        RoomLeaveResponse response = roomService.leaveRoom(1L);
+
+        assertThat(response.isDeleted()).isFalse();
+        assertThat(response.getNewHostIdx()).isEqualTo(2L);
+        assertThat(nextMember.getRole()).isEqualTo(RoomRole.HOST);
+        verify(roomMemberRepository).deleteByRoom_IdxAndUser_Idx(1L, 1L);
+        verify(roomRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("통화방 나가기 - 방장이 마지막 멤버이면 방 삭제")
+    void leaveRoom_host_last_member() {
+        Room room = buildRoom(1L, user, null);
+        RoomMember hostMember = buildMember(user, RoomRole.HOST);
+
+        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(hostMember));
+        given(roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(1L, 1L))
+                .willReturn(Optional.empty());
+
+        RoomLeaveResponse response = roomService.leaveRoom(1L);
+
+        assertThat(response.isDeleted()).isTrue();
+        verify(roomMemberRepository).deleteAllByRoom_Idx(1L);
+        verify(roomRepository).delete(room);
+    }
+
+    @Test
+    @DisplayName("통화방 나가기 - 존재하지 않는 방이면 RoomNotFoundException")
+    void leaveRoom_room_not_found() {
+        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> roomService.leaveRoom(99L))
+                .isInstanceOf(RoomNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("통화방 나가기 - 참여하지 않은 방이면 RoomMemberNotFoundException")
+    void leaveRoom_not_a_member() {
+        Room room = buildRoom(1L, user, null);
+
+        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> roomService.leaveRoom(1L))
+                .isInstanceOf(RoomMemberNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("통화방 나가기 - 채팅방 연결 시 채팅방에서도 퇴장")
+    void leaveRoom_also_leaves_chatroom() {
+        ChatRoom chatRoom = ChatRoom.builder().name("채팅방").build();
+        ReflectionTestUtils.setField(chatRoom, "idx", 10L);
+
+        Room room = buildRoom(1L, user, chatRoom);
+        RoomMember member = buildMember(user, RoomRole.MEMBER);
+
+        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(member));
+
+        roomService.leaveRoom(1L);
+
+        verify(chatParticipantRepository).deleteByUser_IdxAndChatRoom_Idx(1L, 10L);
+    }
+
+    private Room buildRoom(Long idx, User host, ChatRoom chatRoom) {
+        Room room = Room.builder().host(host).title("테스트방").maxParticipant(5).chatRoom(chatRoom).build();
+        ReflectionTestUtils.setField(room, "idx", idx);
+        return room;
+    }
+
+    private RoomMember buildMember(User user, RoomRole role) {
+        RoomMember member = RoomMember.builder().user(user).role(role).build();
+        ReflectionTestUtils.setField(member, "idx", 100L);
+        return member;
     }
 }

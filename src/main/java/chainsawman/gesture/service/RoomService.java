@@ -14,7 +14,9 @@ import chainsawman.gesture.enums.RoomType;
 import chainsawman.gesture.exceptions.room.RoomAlreadyJoinedException;
 import chainsawman.gesture.exceptions.room.RoomFullException;
 import chainsawman.gesture.exceptions.room.RoomMaxParticipantExceededException;
+import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
+import chainsawman.gesture.dto.room.response.RoomLeaveResponse;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -245,6 +248,56 @@ public class RoomService {
                 .joinedAt(member.getCreatedAt())
                 .currentParticipant(currentParticipant + 1)
                 .maxParticipant(room.getMaxParticipant())
+                .build();
+    }
+
+    @Transactional
+    public RoomLeaveResponse leaveRoom(Long roomIdx) {
+        User currentUser = securityUtils.getCurrentUser();
+        Room room = roomRepository.findById(roomIdx)
+                .orElseThrow(RoomNotFoundException::new);
+
+        RoomMember member = roomMemberRepository.findByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx())
+                .orElseThrow(RoomMemberNotFoundException::new);
+
+        if (room.getChatRoom() != null) {
+            chatParticipantRepository.deleteByUser_IdxAndChatRoom_Idx(
+                    currentUser.getIdx(), room.getChatRoom().getIdx());
+        }
+
+        if (member.getRole() == RoomRole.HOST) {
+            Optional<RoomMember> nextMemberOpt = roomMemberRepository
+                    .findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(roomIdx, currentUser.getIdx());
+
+            if (nextMemberOpt.isPresent()) {
+                RoomMember nextMember = nextMemberOpt.get();
+                nextMember.setRole(RoomRole.HOST);
+                room.setHost(nextMember.getUser());
+                roomMemberRepository.save(nextMember);
+                roomRepository.save(room);
+                roomMemberRepository.deleteByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx());
+
+                return RoomLeaveResponse.builder()
+                        .roomIdx(roomIdx)
+                        .deleted(false)
+                        .newHostIdx(nextMember.getUser().getIdx())
+                        .build();
+            } else {
+                roomMemberRepository.deleteAllByRoom_Idx(roomIdx);
+                roomRepository.delete(room);
+
+                return RoomLeaveResponse.builder()
+                        .roomIdx(roomIdx)
+                        .deleted(true)
+                        .build();
+            }
+        }
+
+        roomMemberRepository.deleteByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx());
+
+        return RoomLeaveResponse.builder()
+                .roomIdx(roomIdx)
+                .deleted(false)
                 .build();
     }
 
