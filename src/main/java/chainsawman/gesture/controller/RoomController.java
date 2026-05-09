@@ -79,4 +79,12 @@ public class RoomController {
         RoomJoinResponse result = roomService.joinRoom(roomIdx, request);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }
+
+    @DeleteMapping("/{roomIdx}/leave")
+    @Operation(summary = "통화방 나가기", description = "방장이 나가면 다음 멤버에게 방장이 위임됩니다. 마지막 멤버면 방이 삭제됩니다.")
+    public ResponseEntity<ApiResponse<RoomLeaveResponse>> leaveRoom(@PathVariable Long roomIdx) {
+        RoomLeaveResponse result = roomService.leaveRoom(roomIdx);
+        return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
+    }
 }
+

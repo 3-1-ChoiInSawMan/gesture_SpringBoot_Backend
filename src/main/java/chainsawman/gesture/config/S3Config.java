@@ -12,8 +12,14 @@ public class S3Config {
     @Value("${aws.region}")
     private String region;
 
+    @Value("${aws.disable-ec2-metadata:false}")
+    private boolean disableEc2Metadata;
+
     @Bean
     public AmazonS3 amazonS3() {
+        if (disableEc2Metadata) {
+            System.setProperty("com.amazonaws.sdk.disableEc2Metadata", "true");
+        }
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(new DefaultAWSCredentialsProviderChain())
                 .withRegion(region)
