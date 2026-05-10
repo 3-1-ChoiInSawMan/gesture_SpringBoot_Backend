@@ -1,5 +1,6 @@
 package chainsawman.gesture.entity.call;
 
+import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,10 @@ public class Call {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idx;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_idx", nullable = false)
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "started_by", nullable = false)

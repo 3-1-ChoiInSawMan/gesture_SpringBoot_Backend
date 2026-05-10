@@ -15,6 +15,7 @@ import chainsawman.gesture.exceptions.chat.ChatRoomInvitationNotFoundException;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomInvitationRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
+import chainsawman.gesture.repository.notification.NotificationRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,7 @@ class ChatRoomServiceTest {
     @Mock ChatRoomRepository chatRoomRepository;
     @Mock ChatParticipantRepository chatParticipantRepository;
     @Mock ChatRoomInvitationRepository chatRoomInvitationRepository;
+    @Mock NotificationRepository notificationRepository;
     @Mock UserRepository userRepository;
     @Mock MediaService mediaService;
     @Mock SecurityUtils securityUtils;
