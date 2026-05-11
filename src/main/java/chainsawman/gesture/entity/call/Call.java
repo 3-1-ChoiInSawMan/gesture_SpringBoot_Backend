@@ -1,5 +1,6 @@
 package chainsawman.gesture.entity.call;
 
+import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "calls")
+@Table(name = "calls",
+        indexes = @Index(name = "idx_calls_room", columnList = "room_idx"))
 @Getter
 @Setter
 @Builder
@@ -27,9 +29,14 @@ public class Call {
     private Long idx;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_idx", nullable = false)
+    private Room room;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "started_by", nullable = false)
     private User startedBy;
 
+    @Builder.Default
     @Column(name = "is_recording", nullable = false)
     private boolean isRecording = false;
 
