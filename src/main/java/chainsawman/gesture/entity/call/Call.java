@@ -14,7 +14,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "calls")
+@Table(name = "calls",
+        indexes = @Index(name = "idx_calls_room", columnList = "room_idx"))
 @Getter
 @Setter
 @Builder
@@ -35,6 +36,7 @@ public class Call {
     @JoinColumn(name = "started_by", nullable = false)
     private User startedBy;
 
+    @Builder.Default
     @Column(name = "is_recording", nullable = false)
     private boolean isRecording = false;
 
