@@ -13,7 +13,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "call_participants")
+@Table(name = "call_participants",
+        indexes = @Index(name = "idx_call_participants_call", columnList = "call_idx"))
 @Getter
 @Setter
 @Builder
@@ -27,15 +28,12 @@ public class CallParticipant {
     private Long idx;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_idx", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "calls_idx", nullable = false)
+    @JoinColumn(name = "call_idx", nullable = false)
     private Call call;
-
-    @Column(name = "started_by", nullable = false)
-    private Long startedBy;
 
     @CreatedDate
     @Column(name = "joined_at", nullable = false, updatable = false)
@@ -44,6 +42,7 @@ public class CallParticipant {
     @Column(name = "left_at")
     private LocalDateTime leftAt;
 
-    @Column(nullable = false)
-    private boolean field = false;
+    @Builder.Default
+    @Column(name = "is_muted", nullable = false)
+    private boolean isMuted = false;
 }
