@@ -5,15 +5,19 @@ import chainsawman.gesture.dto.meeting.request.MeetingMinutesUpdateRequest;
 import chainsawman.gesture.dto.meeting.response.*;
 import chainsawman.gesture.entity.call.Call;
 import chainsawman.gesture.entity.meeting.Meeting;
+import chainsawman.gesture.entity.room.RoomMember;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.MeetingStatus;
 import chainsawman.gesture.exceptions.call.CallNotFoundException;
 import chainsawman.gesture.exceptions.meeting.MeetingAlreadyStartedException;
 import chainsawman.gesture.exceptions.meeting.MeetingNotFoundException;
 import chainsawman.gesture.exceptions.meeting.MeetingNotInProgressException;
+import chainsawman.gesture.exceptions.room.NotRoomMemberException;
+import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.repository.call.CallRepository;
 import chainsawman.gesture.repository.meeting.MeetingRepository;
+import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,7 @@ public class MeetingService {
     private final MeetingRepository meetingRepository;
     private final CallRepository callRepository;
     private final RoomRepository roomRepository;
+    private final RoomMemberRepository roomMemberRepository;
     private final SecurityUtils securityUtils;
 
     @Transactional
@@ -45,15 +50,18 @@ public class MeetingService {
 
         Meeting meeting = meetingRepository.save(Meeting.builder()
                 .call(call)
+                .room(call.getRoom())
                 .createdBy(currentUser)
                 .status(MeetingStatus.IN_PROGRESS)
                 .startedAt(LocalDateTime.now())
+                .title("새 회의")
+                .content("")
                 .build());
 
         return MeetingStartResponse.builder()
                 .minutesIdx(meeting.getIdx())
                 .callIdx(call.getIdx())
-                .roomIdx(call.getRoom().getIdx())
+                .roomIdx(meeting.getRoom().getIdx())
                 .startedAt(meeting.getStartedAt())
                 .status(meeting.getStatus().name())
                 .build();
@@ -78,21 +86,22 @@ public class MeetingService {
     }
 
     @Transactional
-    public MeetingEndResponse endMinutes(Long callIdx) {
-        callRepository.findById(callIdx).orElseThrow(CallNotFoundException::new);
+    public MeetingEndResponse endMinutes(Long minutesIdx) {
+        Meeting meeting = meetingRepository.findById(minutesIdx)
+                .orElseThrow(MeetingNotFoundException::new);
 
-        Meeting meeting = meetingRepository.findByCall_IdxAndStatus(callIdx, MeetingStatus.IN_PROGRESS)
-                .orElseThrow(MeetingNotInProgressException::new);
+        if (meeting.getStatus() != MeetingStatus.IN_PROGRESS) {
+            throw new MeetingNotInProgressException();
+        }
 
         meeting.setStatus(MeetingStatus.ENDED);
         meeting.setEndedAt(LocalDateTime.now());
         meetingRepository.save(meeting);
 
-        Call call = meeting.getCall();
         return MeetingEndResponse.builder()
                 .minutesIdx(meeting.getIdx())
-                .callIdx(call.getIdx())
-                .roomIdx(call.getRoom().getIdx())
+                .callIdx(meeting.getCall().getIdx())
+                .roomIdx(meeting.getRoom().getIdx())
                 .title(meeting.getTitle())
                 .meetingDate(meeting.getStartedAt())
                 .participants(meeting.getParticipants())
@@ -119,9 +128,13 @@ public class MeetingService {
 
     @Transactional(readOnly = true)
     public MeetingDetailResponse getMinutesDetail(Long minutesIdx) {
+        User currentUser = securityUtils.getCurrentUser();
         Meeting meeting = meetingRepository.findById(minutesIdx)
                 .orElseThrow(MeetingNotFoundException::new);
-
+        // 그룹 멤버만 조회 가능
+        if (!roomMemberRepository.existsByRoom_IdxAndUser_Idx(meeting.getRoom().getIdx(), currentUser.getIdx())) {
+            throw new NotRoomMemberException();
+        }
         return toDetailResponse(meeting);
     }
 
@@ -132,8 +145,9 @@ public class MeetingService {
         Meeting meeting = meetingRepository.findById(minutesIdx)
                 .orElseThrow(MeetingNotFoundException::new);
 
-        if (!meeting.getCreatedBy().getIdx().equals(currentUser.getIdx())) {
-            throw new AccessDeniedException("본인이 시작한 회의록만 수정할 수 있습니다.");
+        // 그룹 멤버만 수정 가능
+        if (!roomMemberRepository.existsByRoom_IdxAndUser_Idx(meeting.getRoom().getIdx(), currentUser.getIdx())) {
+            throw new NotRoomMemberException();
         }
 
         if (request.getTitle() != null) meeting.setTitle(request.getTitle());
@@ -152,19 +166,19 @@ public class MeetingService {
         Meeting meeting = meetingRepository.findById(minutesIdx)
                 .orElseThrow(MeetingNotFoundException::new);
 
-        if (!meeting.getCreatedBy().getIdx().equals(currentUser.getIdx())) {
-            throw new AccessDeniedException("본인이 시작한 회의록만 삭제할 수 있습니다.");
+        // 그룹 멤버만 삭제 가능
+        if (!roomMemberRepository.existsByRoom_IdxAndUser_Idx(meeting.getRoom().getIdx(), currentUser.getIdx())) {
+            throw new NotRoomMemberException();
         }
 
         meetingRepository.delete(meeting);
     }
 
     private MeetingDetailResponse toDetailResponse(Meeting meeting) {
-        Call call = meeting.getCall();
         return MeetingDetailResponse.builder()
                 .minutesIdx(meeting.getIdx())
-                .callIdx(call.getIdx())
-                .roomIdx(call.getRoom().getIdx())
+                .callIdx(meeting.getCall().getIdx())
+                .roomIdx(meeting.getRoom().getIdx())
                 .title(meeting.getTitle())
                 .meetingDate(meeting.getStartedAt())
                 .participants(meeting.getParticipants())

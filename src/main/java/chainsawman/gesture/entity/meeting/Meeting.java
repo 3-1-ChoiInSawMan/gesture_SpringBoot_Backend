@@ -1,6 +1,7 @@
 package chainsawman.gesture.entity.meeting;
 
 import chainsawman.gesture.entity.call.Call;
+import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.MeetingStatus;
 import jakarta.persistence.*;
@@ -31,9 +32,13 @@ public class Meeting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idx;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "call_idx", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "call_idx", nullable = false)
     private Call call;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_idx", nullable = false)
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

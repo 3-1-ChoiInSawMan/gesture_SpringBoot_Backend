@@ -231,7 +231,7 @@ class MeetingServiceTest {
     // ─── getMinutesList ───────────────────────────
 
     @Test
-    @DisplayName("회의록 목록 조회 - 그룹방 기준으로 callIdx 포함해 반환")
+    @DisplayName("회의록 목록 조회 - 통화방 기준으로 callIdx 포함해 반환")
     void getMinutesList_success() {
         Meeting m1 = buildEndedMeeting(1L, "첫 번째 회의");
         Meeting m2 = buildEndedMeeting(2L, "두 번째 회의");
