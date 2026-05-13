@@ -84,6 +84,8 @@ jobs:
             docker pull ${{ env.DOCKER_IMAGE }}:latest
             docker stop ${{ env.CONTAINER_NAME }} || true
             docker rm ${{ env.CONTAINER_NAME }} || true
+#           redis
+            docker network inspect gesture-net >/dev/null 2>&1 || docker network create gesture-net 
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart always \
@@ -96,5 +98,7 @@ jobs:
               -e AWS_REGION="${{ secrets.AWS_REGION }}" \
               -v /home/ubuntu/app/keys:/app/keys:ro \
               ${{ env.DOCKER_IMAGE }}:latest
+#                    redis
+              docker network connect gesture-net gesture-redis || true
             docker image prune -f
             echo "배포 완료!"
