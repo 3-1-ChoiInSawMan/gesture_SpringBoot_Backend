@@ -8,6 +8,7 @@ import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.ChatRoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class ChatRoomController {
 
     @PostMapping
     @Operation(summary = "채팅방 생성", description = "채팅방 생성 시 사용하는 API 입니다.")
-    public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(@RequestBody ChatRoomRequest request) {
+    public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(@RequestBody @Valid ChatRoomRequest request) {
         ChatRoomResponse result = chatRoomService.createChatRoom(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "채팅방이 생성되었습니다."));
     }

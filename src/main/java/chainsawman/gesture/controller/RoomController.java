@@ -9,6 +9,7 @@ import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ public class RoomController {
 
     @PostMapping
     @Operation(summary = "통화방 생성", description = "통화방 생성 시 사용하는 API 입니다.")
-    public ResponseEntity<ApiResponse<RoomResponse>> createRoom(@RequestBody RoomRequest request) {
+    public ResponseEntity<ApiResponse<RoomResponse>> createRoom(@RequestBody @Valid RoomRequest request) {
         RoomResponse result = roomService.createRoom(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "요청이 성공적으로 처리되었습니다."));
     }

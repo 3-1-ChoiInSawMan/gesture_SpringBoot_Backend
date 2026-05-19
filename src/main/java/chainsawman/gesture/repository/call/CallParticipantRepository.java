@@ -12,6 +12,8 @@ public interface CallParticipantRepository extends JpaRepository<CallParticipant
 
     boolean existsByCall_IdxAndUser_IdxAndLeftAtIsNull(Long callIdx, Long userIdx);
 
+    boolean existsByUser_IdxAndLeftAtIsNull(Long userIdx);
+
     List<CallParticipant> findByCall_IdxAndLeftAtIsNullOrderByJoinedAtAsc(Long callIdx);
 
     int countByCall_IdxAndLeftAtIsNull(Long callIdx);

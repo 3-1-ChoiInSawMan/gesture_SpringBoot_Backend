@@ -50,14 +50,14 @@ public class AuthController {
     @PostMapping("/refresh")
     @Operation(summary = "리프레시 토큰 검증", description = "자동 로그인 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<RefreshTokenValidationResponse>> refreshTokenValidation
-            (@RequestBody RefreshTokenRequest request) {
+            (@RequestBody @Valid RefreshTokenRequest request) {
         RefreshTokenValidationResponse result = authService.refreshTokenValidation(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "검증되었습니다."));
     }
 
     @DeleteMapping("/refresh")
     @Operation(summary = "리프레시 토큰 삭제", description = "로그아웃 시 사용하는 API 입니다.")
-    public ResponseEntity<ApiResponse<Void>> deleteRefreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<ApiResponse<Void>> deleteRefreshToken(@RequestBody @Valid RefreshTokenRequest request) {
         authService.deleteRefreshToken(request);
         return ResponseEntity.ok(ApiResponse.ok("삭제되었습니다."));
     }
