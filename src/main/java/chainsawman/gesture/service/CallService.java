@@ -52,7 +52,7 @@ public class CallService {
                         .startedBy(currentUser)
                         .build()));
 
-        if (callParticipantRepository.existsByCall_IdxAndUser_IdxAndLeftAtIsNull(call.getIdx(), currentUser.getIdx())) {
+        if (callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(currentUser.getIdx())) {
             throw new CallAlreadyJoinedException();
         }
 

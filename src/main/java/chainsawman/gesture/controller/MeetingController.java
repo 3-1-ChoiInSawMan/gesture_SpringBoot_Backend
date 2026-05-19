@@ -7,6 +7,7 @@ import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class MeetingController {
     @Operation(summary = "회의록 생성", description = "BFF 또는 Redis Stream 컨슈머에서 AI 처리 완료 후 호출합니다.")
     public ResponseEntity<ApiResponse<MeetingDetailResponse>> createMinutes(
             @PathVariable Long callIdx,
-            @RequestBody MeetingMinutesCreateRequest request) {
+            @RequestBody @Valid MeetingMinutesCreateRequest request) {
         MeetingDetailResponse result = meetingService.createMinutes(callIdx, request);
         return ResponseEntity.ok(ApiResponse.ok(result, "회의록이 저장되었습니다."));
     }

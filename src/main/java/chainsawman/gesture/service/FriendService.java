@@ -15,15 +15,22 @@ import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.FriendshipStatus;
 import chainsawman.gesture.enums.InvitationStatus;
+import chainsawman.gesture.exceptions.friend.AlreadyFriendException;
+import chainsawman.gesture.exceptions.friend.AlreadyRespondedFriendRequestException;
 import chainsawman.gesture.exceptions.friend.DuplicateFriendInviteException;
+import chainsawman.gesture.exceptions.friend.DuplicateFriendRequestException;
 import chainsawman.gesture.exceptions.friend.FriendRequestNotFoundException;
 import chainsawman.gesture.exceptions.friend.FriendshipNotFoundException;
+import chainsawman.gesture.exceptions.friend.IncomingFriendRequestExistsException;
 import chainsawman.gesture.exceptions.friend.InvalidFriendRequestStatusException;
+import chainsawman.gesture.exceptions.friend.SelfFriendRequestException;
 import chainsawman.gesture.exceptions.room.NotRoomHostException;
+import chainsawman.gesture.exceptions.room.RoomAlreadyJoinedException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.friend.FriendInviteRepository;
 import chainsawman.gesture.repository.friend.FriendshipRepository;
+import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -44,6 +51,7 @@ public class FriendService {
     private final FriendInviteRepository friendInviteRepository;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final RoomMemberRepository roomMemberRepository;
     private final SecurityUtils securityUtils;
 
     @Transactional
@@ -51,6 +59,27 @@ public class FriendService {
         User requester = securityUtils.getCurrentUser();
         User receiver = userRepository.findByIdxAndIsDeactivatedFalse(receiverIdx)
                 .orElseThrow(UserNotFoundException::new);
+
+        if (requester.getIdx().equals(receiverIdx)) {
+            throw new SelfFriendRequestException();
+        }
+
+        if (friendshipRepository.existsByUser_IdxAndFriend_IdxAndStatus(
+                requester.getIdx(), receiverIdx, FriendshipStatus.PENDING)) {
+            throw new DuplicateFriendRequestException();
+        }
+
+        if (friendshipRepository.existsByUser_IdxAndFriend_IdxAndStatus(
+                receiverIdx, requester.getIdx(), FriendshipStatus.PENDING)) {
+            throw new IncomingFriendRequestExistsException();
+        }
+
+        if (friendshipRepository.existsByUser_IdxAndFriend_IdxAndStatus(
+                requester.getIdx(), receiverIdx, FriendshipStatus.ACCEPTED)
+                || friendshipRepository.existsByUser_IdxAndFriend_IdxAndStatus(
+                receiverIdx, requester.getIdx(), FriendshipStatus.ACCEPTED)) {
+            throw new AlreadyFriendException();
+        }
 
         Friendship friendship = friendshipRepository.save(Friendship.builder()
                 .user(requester)
@@ -76,6 +105,10 @@ public class FriendService {
 
         Friendship friendship = friendshipRepository.findByIdxAndFriend_Idx(friendshipIdx, currentUser.getIdx())
                 .orElseThrow(FriendRequestNotFoundException::new);
+
+        if (friendship.getStatus() != FriendshipStatus.PENDING) {
+            throw new AlreadyRespondedFriendRequestException();
+        }
 
         FriendshipStatus newStatus;
         try {
@@ -130,6 +163,10 @@ public class FriendService {
 
         if (!room.getHost().getIdx().equals(sender.getIdx())) {
             throw new NotRoomHostException();
+        }
+
+        if (roomMemberRepository.existsByRoom_IdxAndUser_Idx(room.getIdx(), receiver.getIdx())) {
+            throw new RoomAlreadyJoinedException();
         }
 
         if (friendInviteRepository.existsBySender_IdxAndReceiver_IdxAndRoom_IdxAndStatus(

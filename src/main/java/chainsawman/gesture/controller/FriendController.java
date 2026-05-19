@@ -7,6 +7,7 @@ import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +54,7 @@ public class FriendController {
     @Operation(summary = "친구 요청 수락/거절", description = "ACCEPTED or REJECTED로 선택합니다.")
     public ResponseEntity<ApiResponse<FriendRequestRespondResponse>> respondToFriendRequest(
             @PathVariable Long friendshipIdx,
-            @RequestBody FriendRequestRespondRequest request) {
+            @RequestBody @Valid FriendRequestRespondRequest request) {
         FriendRequestRespondResponse result = friendService.respondToFriendRequest(friendshipIdx, request);
         return ResponseEntity.ok(ApiResponse.ok(result, "처리되었습니다."));
     }
@@ -67,7 +68,7 @@ public class FriendController {
 
     @PostMapping("/invite")
     @Operation(summary = "친구 통화방 초대", description = "친구 통화방 초대 시 사용하는 API 입니다.")
-    public ResponseEntity<ApiResponse<FriendInviteResponse>> inviteFriend(@RequestBody FriendInviteRequest request) {
+    public ResponseEntity<ApiResponse<FriendInviteResponse>> inviteFriend(@RequestBody @Valid FriendInviteRequest request) {
         FriendInviteResponse result = friendService.invite(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "초대되었습니다."));
     }
