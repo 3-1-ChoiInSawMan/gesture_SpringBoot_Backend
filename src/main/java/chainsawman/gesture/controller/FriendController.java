@@ -1,12 +1,8 @@
 package chainsawman.gesture.controller;
 
+import chainsawman.gesture.dto.friend.request.FriendInviteRequest;
 import chainsawman.gesture.dto.friend.request.FriendRequestRespondRequest;
-import chainsawman.gesture.dto.friend.response.FriendCountResponse;
-import chainsawman.gesture.dto.friend.response.FriendDeleteResponse;
-import chainsawman.gesture.dto.friend.response.FriendListResponse;
-import chainsawman.gesture.dto.friend.response.FriendRequestListResponse;
-import chainsawman.gesture.dto.friend.response.FriendRequestRespondResponse;
-import chainsawman.gesture.dto.friend.response.FriendRequestSendResponse;
+import chainsawman.gesture.dto.friend.response.*;
 import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,5 +63,12 @@ public class FriendController {
     public ResponseEntity<ApiResponse<FriendDeleteResponse>> deleteFriend(@PathVariable Long userIdx) {
         FriendDeleteResponse result = friendService.deleteFriend(userIdx);
         return ResponseEntity.ok(ApiResponse.ok(result, "친구가 삭제되었습니다."));
+    }
+
+    @PostMapping("/invite")
+    @Operation(summary = "친구 통화방 초대", description = "친구 통화방 초대 시 사용하는 API 입니다.")
+    public ResponseEntity<ApiResponse<FriendInviteResponse>> inviteFriend(@RequestBody FriendInviteRequest request) {
+        FriendInviteResponse result = friendService.invite(request);
+        return ResponseEntity.ok(ApiResponse.ok(result, "초대되었습니다."));
     }
 }
