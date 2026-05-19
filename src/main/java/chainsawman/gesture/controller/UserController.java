@@ -7,6 +7,7 @@ import chainsawman.gesture.global.ApiResponse;
 import chainsawman.gesture.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +54,7 @@ public class UserController {
     @PatchMapping("/password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호 변경 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<PatchPasswordResponse>> patchPassword
-            (@RequestBody PatchPasswordRequest request) {
+            (@RequestBody @Valid PatchPasswordRequest request) {
         PatchPasswordResponse result = userService.patchPassword(request);
         return ResponseEntity.ok(ApiResponse.ok(result, "변경되었습니다."));
     }

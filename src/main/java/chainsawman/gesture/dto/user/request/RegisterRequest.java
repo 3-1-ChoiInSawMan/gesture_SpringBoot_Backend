@@ -1,6 +1,7 @@
 package chainsawman.gesture.dto.user.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,9 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
+    @NotBlank
     private String id;
+    @NotBlank
     private String email;
+    @NotBlank
     private String password;
+    @NotBlank
     private String nickname;
     @JsonProperty("profile_image_uuid")
     private String profileImageUuid;
