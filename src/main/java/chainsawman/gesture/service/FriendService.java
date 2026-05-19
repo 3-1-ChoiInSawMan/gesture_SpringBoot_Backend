@@ -1,20 +1,30 @@
 package chainsawman.gesture.service;
 
+import chainsawman.gesture.dto.friend.request.FriendInviteRequest;
 import chainsawman.gesture.dto.friend.request.FriendRequestRespondRequest;
 import chainsawman.gesture.dto.friend.response.FriendCountResponse;
 import chainsawman.gesture.dto.friend.response.FriendDeleteResponse;
+import chainsawman.gesture.dto.friend.response.FriendInviteResponse;
 import chainsawman.gesture.dto.friend.response.FriendListResponse;
 import chainsawman.gesture.dto.friend.response.FriendRequestListResponse;
 import chainsawman.gesture.dto.friend.response.FriendRequestRespondResponse;
 import chainsawman.gesture.dto.friend.response.FriendRequestSendResponse;
+import chainsawman.gesture.entity.friend.FriendInvite;
 import chainsawman.gesture.entity.friend.Friendship;
+import chainsawman.gesture.entity.room.Room;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.FriendshipStatus;
+import chainsawman.gesture.enums.InvitationStatus;
+import chainsawman.gesture.exceptions.friend.DuplicateFriendInviteException;
 import chainsawman.gesture.exceptions.friend.FriendRequestNotFoundException;
 import chainsawman.gesture.exceptions.friend.FriendshipNotFoundException;
 import chainsawman.gesture.exceptions.friend.InvalidFriendRequestStatusException;
+import chainsawman.gesture.exceptions.room.NotRoomHostException;
+import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
+import chainsawman.gesture.repository.friend.FriendInviteRepository;
 import chainsawman.gesture.repository.friend.FriendshipRepository;
+import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +41,9 @@ import java.util.stream.Collectors;
 public class FriendService {
 
     private final FriendshipRepository friendshipRepository;
+    private final FriendInviteRepository friendInviteRepository;
     private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
     private final SecurityUtils securityUtils;
 
     @Transactional
@@ -106,6 +118,32 @@ public class FriendService {
                 + friendshipRepository.countByFriend_IdxAndStatus(myIdx, FriendshipStatus.ACCEPTED);
 
         return FriendCountResponse.builder().count(count).build();
+    }
+
+    @Transactional
+    public FriendInviteResponse invite(FriendInviteRequest request) {
+        User sender = securityUtils.getCurrentUser();
+        User receiver = userRepository.findByIdxAndIsDeactivatedFalse(request.getTargetUserIdx())
+                .orElseThrow(UserNotFoundException::new);
+        Room room = roomRepository.findById(request.getTargetRoomIdx())
+                .orElseThrow(RoomNotFoundException::new);
+
+        if (!room.getHost().getIdx().equals(sender.getIdx())) {
+            throw new NotRoomHostException();
+        }
+
+        if (friendInviteRepository.existsBySender_IdxAndReceiver_IdxAndRoom_IdxAndStatus(
+                sender.getIdx(), receiver.getIdx(), room.getIdx(), InvitationStatus.PENDING)) {
+            throw new DuplicateFriendInviteException();
+        }
+
+        FriendInvite invite = friendInviteRepository.save(FriendInvite.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .room(room)
+                .build());
+
+        return FriendInviteResponse.from(invite);
     }
 
     @Transactional
