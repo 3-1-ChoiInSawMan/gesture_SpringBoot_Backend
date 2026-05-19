@@ -21,7 +21,7 @@ public class FriendController {
 
     private final FriendService friendService;
 
-    @PostMapping("/{userIdx}")
+    @PostMapping("/requests/{userIdx}")
     @Operation(summary = "친구 요청 발송", description = "친구 요청 발송 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<FriendRequestSendResponse>> postFriend(@PathVariable Long userIdx) {
         FriendRequestSendResponse result = friendService.postFriend(userIdx);
@@ -49,7 +49,7 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponse.ok(result, "조회되었습니다."));
     }
 
-    @PatchMapping("/{friendshipIdx}")
+    @PatchMapping("/requests/{friendshipIdx}")
     @Operation(summary = "친구 요청 수락/거절", description = "ACCEPTED or REJECTED로 선택합니다.")
     public ResponseEntity<ApiResponse<FriendRequestRespondResponse>> respondToFriendRequest(
             @PathVariable Long friendshipIdx,
@@ -58,7 +58,7 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponse.ok(result, "처리되었습니다."));
     }
 
-    @DeleteMapping("/{userIdx}")
+    @DeleteMapping("/requests/{userIdx}")
     @Operation(summary = "친구 삭제", description = "친구 삭제 시 사용하는 API 입니다.")
     public ResponseEntity<ApiResponse<FriendDeleteResponse>> deleteFriend(@PathVariable Long userIdx) {
         FriendDeleteResponse result = friendService.deleteFriend(userIdx);
