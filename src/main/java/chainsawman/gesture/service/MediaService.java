@@ -110,7 +110,8 @@ public class MediaService {
                 .stream()
                 .collect(Collectors.toMap(
                         media -> media.getUser().getId(),
-                        media -> amazonS3.getUrl(bucket, media.getFile()).toString()
+                        media -> amazonS3.getUrl(bucket, media.getFile()).toString(),
+                        (existing, replacement) -> existing
                 ));
     }
 

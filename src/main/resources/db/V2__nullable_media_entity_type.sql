@@ -1,1 +1,0 @@
-ALTER TABLE media MODIFY COLUMN entity_type VARCHAR(20) NULL;

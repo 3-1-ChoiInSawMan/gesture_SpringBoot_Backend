@@ -1,1 +1,0 @@
-ALTER TABLE meetings MODIFY COLUMN content TEXT NULL;
