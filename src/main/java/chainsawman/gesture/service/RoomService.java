@@ -32,7 +32,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -107,7 +110,13 @@ public class RoomService {
                 ? roomRepository.findByCategory(category, pageable)
                 : roomRepository.findAll(pageable);
 
-        return rooms.map(room -> toRoomListResponse(room, roomMemberRepository.countByRoom_Idx(room.getIdx())));
+        Map<String, String> profileUrlMap = fetchHostProfileUrls(rooms);
+
+        return rooms.map(room -> RoomListResponse.from(
+                room,
+                roomMemberRepository.countByRoom_Idx(room.getIdx()),
+                profileUrlMap.get(room.getHost().getId())
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +124,14 @@ public class RoomService {
         Page<Room> rooms = (category != null)
                 ? roomRepository.findByTitleContainingIgnoreCaseAndCategory(keyword, category, pageable)
                 : roomRepository.findByTitleContainingIgnoreCase(keyword, pageable);
-        return rooms.map(room -> toRoomListResponse(room, roomMemberRepository.countByRoom_Idx(room.getIdx())));
+
+        Map<String, String> profileUrlMap = fetchHostProfileUrls(rooms);
+
+        return rooms.map(room -> RoomListResponse.from(
+                room,
+                roomMemberRepository.countByRoom_Idx(room.getIdx()),
+                profileUrlMap.get(room.getHost().getId())
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -301,18 +317,12 @@ public class RoomService {
                 .build();
     }
 
-    private RoomListResponse toRoomListResponse(Room room, int currentParticipant) {
-        return RoomListResponse.builder()
-                .roomIdx(room.getIdx())
-                .title(room.getTitle())
-                .category(categoryName(room.getCategory()))
-                .currentParticipant(currentParticipant)
-                .maxParticipant(room.getMaxParticipant())
-                .publicRoom(room.isPublic())
-                .hasPassword(room.getPassword() != null)
-                .thumbnailUrl(room.getThumbnailUrl())
-                .hostUserIdx(room.getHost().getIdx())
-                .build();
+    private Map<String, String> fetchHostProfileUrls(Page<Room> rooms) {
+        List<String> hostIds = rooms.stream()
+                .map(room -> room.getHost().getId())
+                .distinct()
+                .collect(Collectors.toList());
+        return mediaService.getProfileImageUrlMap(hostIds);
     }
 
     private RoomType parseCategory(String category) {
