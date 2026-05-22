@@ -18,6 +18,7 @@ import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.repository.friend.FriendInviteRepository;
 import chainsawman.gesture.repository.friend.FriendshipRepository;
+import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -47,6 +48,7 @@ class FriendServiceTest {
     @Mock FriendInviteRepository friendInviteRepository;
     @Mock UserRepository userRepository;
     @Mock RoomRepository roomRepository;
+    @Mock RoomMemberRepository roomMemberRepository;
     @Mock SecurityUtils securityUtils;
 
     @InjectMocks FriendService friendService;
@@ -81,6 +83,7 @@ class FriendServiceTest {
         given(securityUtils.getCurrentUser()).willReturn(sender);
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
         given(roomRepository.findById(55L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(55L, 2L)).willReturn(false);
         given(friendInviteRepository.save(any(FriendInvite.class))).willAnswer(inv -> {
             FriendInvite invite = inv.getArgument(0);
             ReflectionTestUtils.setField(invite, "idx", 10L);
@@ -132,6 +135,7 @@ class FriendServiceTest {
         given(securityUtils.getCurrentUser()).willReturn(sender);
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
         given(roomRepository.findById(55L)).willReturn(Optional.of(room));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(55L, 2L)).willReturn(false);
         given(friendInviteRepository.existsBySender_IdxAndReceiver_IdxAndRoom_IdxAndStatus(
                 1L, 2L, 55L, InvitationStatus.PENDING)).willReturn(true);
 

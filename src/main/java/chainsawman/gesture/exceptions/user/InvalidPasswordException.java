@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 
 public class InvalidPasswordException extends DomainException {
     public InvalidPasswordException() {
-        super(HttpStatus.BAD_REQUEST, "USER_003", "비밀번호가 올바르지 않습니다.");
+        super(HttpStatus.UNAUTHORIZED, "USER_003", "비밀번호가 올바르지 않습니다.");
     }
 }

@@ -15,7 +15,6 @@ import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.repository.user.UserRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

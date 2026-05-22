@@ -10,7 +10,7 @@ import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.call.CallAlreadyJoinedException;
 import chainsawman.gesture.exceptions.call.CallParticipantNotFoundException;
 import chainsawman.gesture.exceptions.call.NoActiveCallException;
-import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
+import chainsawman.gesture.exceptions.room.NotRoomMemberException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.repository.call.CallParticipantRepository;
 import chainsawman.gesture.repository.call.CallRepository;
@@ -73,7 +73,7 @@ class CallServiceTest {
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.empty());
         given(callRepository.save(any(Call.class))).willReturn(newCall);
-        given(callParticipantRepository.existsByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L)).willReturn(false);
+        given(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(1L)).willReturn(false);
         given(callParticipantRepository.save(any(CallParticipant.class))).willAnswer(inv -> {
             CallParticipant p = inv.getArgument(0);
             ReflectionTestUtils.setField(p, "joinedAt", LocalDateTime.now());
@@ -100,7 +100,7 @@ class CallServiceTest {
         given(roomRepository.findById(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(existingCall));
-        given(callParticipantRepository.existsByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L)).willReturn(false);
+        given(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(1L)).willReturn(false);
         given(callParticipantRepository.save(any(CallParticipant.class))).willAnswer(inv -> {
             CallParticipant p = inv.getArgument(0);
             ReflectionTestUtils.setField(p, "joinedAt", LocalDateTime.now());
@@ -127,14 +127,14 @@ class CallServiceTest {
     }
 
     @Test
-    @DisplayName("통화 참여 - 방 멤버가 아니면 RoomMemberNotFoundException")
+    @DisplayName("통화 참여 - 방 멤버가 아니면 NotRoomMemberException")
     void joinCall_not_a_room_member() {
         given(securityUtils.getCurrentUser()).willReturn(user);
         given(roomRepository.findById(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(false);
 
         assertThatThrownBy(() -> callService.joinCall(10L))
-                .isInstanceOf(RoomMemberNotFoundException.class);
+                .isInstanceOf(NotRoomMemberException.class);
     }
 
     @Test
@@ -146,7 +146,7 @@ class CallServiceTest {
         given(roomRepository.findById(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(existingCall));
-        given(callParticipantRepository.existsByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L)).willReturn(true);
+        given(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(1L)).willReturn(true);
 
         assertThatThrownBy(() -> callService.joinCall(10L))
                 .isInstanceOf(CallAlreadyJoinedException.class);
