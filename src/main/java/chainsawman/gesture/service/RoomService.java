@@ -15,8 +15,8 @@ import chainsawman.gesture.exceptions.room.RoomAlreadyJoinedException;
 import chainsawman.gesture.exceptions.room.RoomFullException;
 import chainsawman.gesture.exceptions.room.RoomMaxParticipantExceededException;
 import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
+import chainsawman.gesture.exceptions.room.NotRoomHostException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
-import chainsawman.gesture.dto.room.response.RoomLeaveResponse;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
@@ -26,7 +26,6 @@ import chainsawman.gesture.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -160,7 +159,7 @@ public class RoomService {
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!room.getHost().getIdx().equals(currentUser.getIdx())) {
-            throw new AccessDeniedException("방장만 수정할 수 있습니다.");
+            throw new NotRoomHostException();
         }
 
         int currentCount = roomMemberRepository.countByRoom_Idx(roomIdx);
@@ -208,7 +207,7 @@ public class RoomService {
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!room.getHost().getIdx().equals(currentUser.getIdx())) {
-            throw new AccessDeniedException("방장만 삭제할 수 있습니다.");
+            throw new NotRoomHostException();
         }
 
         roomMemberRepository.deleteAllByRoom_Idx(roomIdx);

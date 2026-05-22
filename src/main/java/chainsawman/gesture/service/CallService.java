@@ -11,7 +11,7 @@ import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.exceptions.call.CallAlreadyJoinedException;
 import chainsawman.gesture.exceptions.call.CallParticipantNotFoundException;
 import chainsawman.gesture.exceptions.call.NoActiveCallException;
-import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
+import chainsawman.gesture.exceptions.room.NotRoomMemberException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.repository.call.CallParticipantRepository;
 import chainsawman.gesture.repository.call.CallRepository;
@@ -42,7 +42,7 @@ public class CallService {
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!roomMemberRepository.existsByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx())) {
-            throw new RoomMemberNotFoundException();
+            throw new NotRoomMemberException();
         }
 
         // 활성 통화 세션이 없으면 새로 생성 (최초 참여자가 호스트)

@@ -12,9 +12,11 @@ import chainsawman.gesture.exceptions.call.CallNotFoundException;
 import chainsawman.gesture.exceptions.meeting.MeetingAlreadyStartedException;
 import chainsawman.gesture.exceptions.meeting.MeetingNotFoundException;
 import chainsawman.gesture.exceptions.meeting.MeetingNotInProgressException;
+import chainsawman.gesture.exceptions.room.NotRoomMemberException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.repository.call.CallRepository;
 import chainsawman.gesture.repository.meeting.MeetingRepository;
+import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -48,6 +49,7 @@ class MeetingServiceTest {
     @Mock MeetingRepository meetingRepository;
     @Mock CallRepository callRepository;
     @Mock RoomRepository roomRepository;
+    @Mock RoomMemberRepository roomMemberRepository;
     @Mock SecurityUtils securityUtils;
 
     @InjectMocks MeetingService meetingService;
@@ -194,12 +196,10 @@ class MeetingServiceTest {
         meeting.setAiSummary("프로젝트 일정 논의");
         meeting.setConclusion(List.of("개발 완료 목표 6월"));
 
-        given(callRepository.findById(100L)).willReturn(Optional.of(call));
-        given(meetingRepository.findByCall_IdxAndStatus(100L, MeetingStatus.IN_PROGRESS))
-                .willReturn(Optional.of(meeting));
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
         given(meetingRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-        MeetingEndResponse response = meetingService.endMinutes(100L);
+        MeetingEndResponse response = meetingService.endMinutes(1L);
 
         assertThat(meeting.getStatus()).isEqualTo(MeetingStatus.ENDED);
         assertThat(meeting.getEndedAt()).isNotNull();
@@ -209,23 +209,23 @@ class MeetingServiceTest {
     }
 
     @Test
-    @DisplayName("회의록 종료 - 진행 중인 회의록 없으면 MeetingNotInProgressException")
+    @DisplayName("회의록 종료 - ENDED 상태인 회의록이면 MeetingNotInProgressException")
     void endMinutes_not_in_progress() {
-        given(callRepository.findById(100L)).willReturn(Optional.of(call));
-        given(meetingRepository.findByCall_IdxAndStatus(100L, MeetingStatus.IN_PROGRESS))
-                .willReturn(Optional.empty());
+        Meeting endedMeeting = buildEndedMeeting(1L, "이미 종료된 회의");
 
-        assertThatThrownBy(() -> meetingService.endMinutes(100L))
+        given(meetingRepository.findById(1L)).willReturn(Optional.of(endedMeeting));
+
+        assertThatThrownBy(() -> meetingService.endMinutes(1L))
                 .isInstanceOf(MeetingNotInProgressException.class);
     }
 
     @Test
-    @DisplayName("회의록 종료 - 존재하지 않는 통화 세션이면 CallNotFoundException")
-    void endMinutes_call_not_found() {
-        given(callRepository.findById(999L)).willReturn(Optional.empty());
+    @DisplayName("회의록 종료 - 존재하지 않는 회의록이면 MeetingNotFoundException")
+    void endMinutes_minutes_not_found() {
+        given(meetingRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> meetingService.endMinutes(999L))
-                .isInstanceOf(CallNotFoundException.class);
+                .isInstanceOf(MeetingNotFoundException.class);
     }
 
     // ─── getMinutesList ───────────────────────────
@@ -277,6 +277,7 @@ class MeetingServiceTest {
         meeting.setConclusion(List.of("결론 1", "결론 2"));
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
 
         MeetingDetailResponse response = meetingService.getMinutesDetail(1L);
 
@@ -305,9 +306,9 @@ class MeetingServiceTest {
         Meeting meeting = buildEndedMeeting(1L, "원래 제목");
         meeting.setContent("원래 내용");
         meeting.setConclusion(new ArrayList<>(List.of("원래 결론")));
-        ReflectionTestUtils.setField(meeting, "createdBy", user);
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(meetingRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         MeetingDetailResponse response = meetingService.updateMinutes(1L,
@@ -323,9 +324,9 @@ class MeetingServiceTest {
     void updateMinutes_null_fields_preserved() {
         Meeting meeting = buildEndedMeeting(1L, "원래 제목");
         meeting.setContent("원래 내용");
-        ReflectionTestUtils.setField(meeting, "createdBy", user);
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(meetingRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         MeetingDetailResponse response = meetingService.updateMinutes(1L, buildUpdateRequest(null, null, null));
@@ -335,18 +336,15 @@ class MeetingServiceTest {
     }
 
     @Test
-    @DisplayName("회의록 수정 - 본인이 시작하지 않은 회의록이면 AccessDeniedException")
+    @DisplayName("회의록 수정 - 방 멤버가 아니면 NotRoomMemberException")
     void updateMinutes_access_denied() {
-        User otherUser = new User();
-        ReflectionTestUtils.setField(otherUser, "idx", 2L);
-
         Meeting meeting = buildEndedMeeting(1L, "회의");
-        ReflectionTestUtils.setField(meeting, "createdBy", otherUser);
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(false);
 
         assertThatThrownBy(() -> meetingService.updateMinutes(1L, buildUpdateRequest("제목", null, null)))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(NotRoomMemberException.class);
 
         verify(meetingRepository, never()).save(any());
     }
@@ -366,9 +364,9 @@ class MeetingServiceTest {
     @DisplayName("회의록 삭제 - 정상 삭제")
     void deleteMinutes_success() {
         Meeting meeting = buildEndedMeeting(1L, "회의");
-        ReflectionTestUtils.setField(meeting, "createdBy", user);
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
 
         meetingService.deleteMinutes(1L);
 
@@ -376,18 +374,15 @@ class MeetingServiceTest {
     }
 
     @Test
-    @DisplayName("회의록 삭제 - 본인이 시작하지 않은 회의록이면 AccessDeniedException")
+    @DisplayName("회의록 삭제 - 방 멤버가 아니면 NotRoomMemberException")
     void deleteMinutes_access_denied() {
-        User otherUser = new User();
-        ReflectionTestUtils.setField(otherUser, "idx", 2L);
-
         Meeting meeting = buildEndedMeeting(1L, "회의");
-        ReflectionTestUtils.setField(meeting, "createdBy", otherUser);
 
         given(meetingRepository.findById(1L)).willReturn(Optional.of(meeting));
+        given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(false);
 
         assertThatThrownBy(() -> meetingService.deleteMinutes(1L))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(NotRoomMemberException.class);
 
         verify(meetingRepository, never()).delete(any());
     }
@@ -408,6 +403,7 @@ class MeetingServiceTest {
     private Meeting buildInProgressMeeting(Long idx) {
         Meeting meeting = Meeting.builder()
                 .call(call)
+                .room(room)
                 .createdBy(user)
                 .status(MeetingStatus.IN_PROGRESS)
                 .startedAt(LocalDateTime.now())
@@ -419,6 +415,7 @@ class MeetingServiceTest {
     private Meeting buildEndedMeeting(Long idx, String title) {
         Meeting meeting = Meeting.builder()
                 .call(call)
+                .room(room)
                 .createdBy(user)
                 .title(title)
                 .status(MeetingStatus.ENDED)

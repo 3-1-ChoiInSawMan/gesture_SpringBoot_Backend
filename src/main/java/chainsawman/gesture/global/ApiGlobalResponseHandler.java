@@ -89,7 +89,7 @@ public class ApiGlobalResponseHandler {
                 .findFirst()
                 .orElse("입력값이 올바르지 않습니다.");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("COMMON_400", "입력값이 올바르지 않습니다."));
+                .body(ApiResponse.error("COMMON_400", message));
     }
 
     @ExceptionHandler(Exception.class)

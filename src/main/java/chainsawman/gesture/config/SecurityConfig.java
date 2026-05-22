@@ -1,6 +1,5 @@
 package chainsawman.gesture.config;
-import chainsawman.gesture.global.TokenProvider;
-import chainsawman.gesture.security.CustomUserDetailsService;
+
 import chainsawman.gesture.security.InternalAuthFilter;
 import chainsawman.gesture.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final TokenProvider tokenProvider;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final InternalAuthFilter internalAuthFilter;
 
     @Bean
@@ -38,7 +35,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -50,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
+                                "/users/check-id",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
@@ -57,10 +54,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, customUserDetailsService),
-                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(internalAuthFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
-
 }

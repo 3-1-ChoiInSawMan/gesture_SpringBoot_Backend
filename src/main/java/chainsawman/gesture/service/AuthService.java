@@ -16,7 +16,7 @@ import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.global.TokenProvider;
 import chainsawman.gesture.repository.user.RefreshTokenRepository;
 import chainsawman.gesture.repository.user.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
