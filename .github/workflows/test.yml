@@ -61,6 +61,8 @@ jobs:
           AWS_SECRET_KEY: dummy
           AWS_REGION: ap-northeast-2
           AWS_S3_BUCKET: dummy-bucket
+          SPRING_JWT_PRIVATE_KEY: file:/tmp/test-keys/private_key.pem
+          SPRING_JWT_PUBLIC_KEY: file:/tmp/test-keys/public_key.pem
         run: ./gradlew test
 
       - name: Upload test report
