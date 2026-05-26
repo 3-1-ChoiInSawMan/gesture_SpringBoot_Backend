@@ -62,6 +62,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("삭제되었습니다."));
     }
 
+    @PostMapping("/email-send")
+    @Operation(summary = "이메일 인증 발송", description = "이메일 인증 코드를 발송합니다.")
+    public ResponseEntity<ApiResponse<Void>> sendEmailVerification(@RequestBody @Valid EmailSendRequest request) {
+        authService.sendEmailVerification(request);
+        return ResponseEntity.ok(ApiResponse.ok("인증 코드가 발송되었습니다."));
+    }
+
+    @PostMapping("/email-verification")
+    @Operation(summary = "이메일 인증 확인", description = "이메일 인증 코드를 검증합니다.")
+    public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyEmail(@RequestBody @Valid EmailVerificationRequest request) {
+        EmailVerificationResponse result = authService.verifyEmail(request);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
 
 
 

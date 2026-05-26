@@ -5,7 +5,9 @@ import chainsawman.gesture.dto.user.response.*;
 import chainsawman.gesture.entity.user.RefreshToken;
 import chainsawman.gesture.entity.user.User;
 import chainsawman.gesture.enums.ProviderType;
+import chainsawman.gesture.exceptions.auth.ExpiredVerificationCodeException;
 import chainsawman.gesture.exceptions.auth.InvalidRefreshTokenException;
+import chainsawman.gesture.exceptions.auth.InvalidVerificationCodeException;
 import chainsawman.gesture.exceptions.user.DeactivatedUserException;
 import chainsawman.gesture.exceptions.user.DuplicateEmailException;
 import chainsawman.gesture.exceptions.user.DuplicateIdException;
@@ -16,23 +18,32 @@ import chainsawman.gesture.exceptions.user.UserNotFoundException;
 import chainsawman.gesture.global.TokenProvider;
 import chainsawman.gesture.repository.user.RefreshTokenRepository;
 import chainsawman.gesture.repository.user.UserRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AuthService {
+    private static final String EMAIL_VERIFICATION_PREFIX = "email:verification:";
+    private static final long VERIFICATION_TTL_MINUTES = 5;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
     private final MediaService mediaService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final EmailService emailService;
 
 
     // 로그인
@@ -204,6 +215,36 @@ public class AuthService {
     }
 
 
+
+    // 이메일 인증 코드 발송
+    public void sendEmailVerification(EmailSendRequest request) {
+        String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+        String key = EMAIL_VERIFICATION_PREFIX + request.getEmail();
+        redisTemplate.opsForValue().set(key, code, VERIFICATION_TTL_MINUTES, TimeUnit.MINUTES);
+        emailService.sendVerificationCode(request.getEmail(), code);
+    }
+
+    // 이메일 인증 코드 확인
+    public EmailVerificationResponse verifyEmail(EmailVerificationRequest request) {
+        String key = EMAIL_VERIFICATION_PREFIX + request.getEmail();
+        String stored = redisTemplate.opsForValue().get(key);
+
+        if (stored == null) {
+            throw new ExpiredVerificationCodeException();
+        }
+        if (!stored.equals(request.getCode())) {
+            throw new InvalidVerificationCodeException();
+        }
+
+        redisTemplate.delete(key);
+
+        LocalDateTime verifiedAt = LocalDateTime.now();
+        return EmailVerificationResponse.builder()
+                .verified(true)
+                .email(request.getEmail())
+                .verifiedAt(verifiedAt)
+                .build();
+    }
 
     // 리프레시 토큰 저장 (있으면 업데이트 없으면 생성)
     private void saveRefreshToken(User user, String refreshToken) {
