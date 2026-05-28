@@ -28,7 +28,7 @@
 ## 실사용자 검증 · 한국농아인협회 (대구광역시)
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/yoonjeonggg/readme-assets/main/gesture/%ED%95%9C%EA%B5%AD%EB%86%8D%EC%95%84%EC%9D%B8%ED%98%91%ED%9A%8C_%EB%8C%80%EA%B5%AC.jpeg" width="400">
+  <img src="https://raw.githubusercontent.com/yoonjeonggg/readme-assets/main/gesture/%ED%95%9C%EA%B5%AD%EB%86%8D%EC%95%84%EC%9D%B8%ED%98%91%ED%9A%8C_%EB%8C%80%EA%B5%AC.jpeg" width="250">
 </div>
 
 - 한국농아인협회 (대구광역시) 테스트 협의 완료
