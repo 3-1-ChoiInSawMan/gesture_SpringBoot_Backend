@@ -32,4 +32,7 @@ public class ChatParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_idx")
     private User user;
+
+    @Column(name = "last_read_message_idx")
+    private Long lastReadMessageIdx;
 }
