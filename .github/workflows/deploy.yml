@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/gesture-core
+  DOCKER_IMAGE: yoonjeonggg/gesture-core
   CONTAINER_NAME: gesture-core
 
 jobs:
