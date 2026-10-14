@@ -56,19 +56,19 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          password: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            mkdir -p /home/ubuntu/app/keys
-            chmod 700 /home/ubuntu/app/keys
-            cat > /home/ubuntu/app/keys/private_key.pem << 'EOF'
+            mkdir -p /home/ec2-user/app/keys
+            chmod 700 /home/ec2-user/app/keys
+            cat > /home/ec2-user/app/keys/private_key.pem << 'EOF'
             ${{ secrets.JWT_PRIVATE_KEY }}
             EOF
-            cat > /home/ubuntu/app/keys/public_key.pem << 'EOF'
+            cat > /home/ec2-user/app/keys/public_key.pem << 'EOF'
             ${{ secrets.JWT_PUBLIC_KEY }}
             EOF
-            chmod 600 /home/ubuntu/app/keys/private_key.pem
-            chmod 644 /home/ubuntu/app/keys/public_key.pem
+            chmod 600 /home/ec2-user/app/keys/private_key.pem
+            chmod 644 /home/ec2-user/app/keys/public_key.pem
 
       # EC2에 SSH 접속 후 배포
       - name: Deploy to EC2 via SSH
@@ -76,7 +76,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          password: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           envs: DOCKER_IMAGE,CONTAINER_NAME
           script: |
@@ -86,6 +86,7 @@ jobs:
             docker rm ${{ env.CONTAINER_NAME }} || true
             docker network inspect gesture-net >/dev/null 2>&1 || docker network create gesture-net
             docker network connect gesture-net gesture-redis || true
+            docker network connect gesture-net mysql8 || true
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --network gesture-net \
@@ -97,9 +98,11 @@ jobs:
               -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
               -e AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}" \
               -e AWS_REGION="${{ secrets.AWS_REGION }}" \
+            -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
               -e BREVO_API_KEY="${{ secrets.BREVO_API_KEY }}" \
               -e BREVO_TEMPLATE_VERIFICATION_ID="${{ secrets.BREVO_TEMPLATE_VERIFICATION_ID }}" \
-              -v /home/ubuntu/app/keys:/app/keys:ro \
+              -v /home/ec2-user/app/keys:/app/keys:ro \
               ${{ env.DOCKER_IMAGE }}:latest
             docker image prune -f
             echo "배포 완료!"
