@@ -158,7 +158,7 @@ public class FriendService {
         User sender = securityUtils.getCurrentUser();
         User receiver = userRepository.findByIdxAndIsDeactivatedFalse(request.getTargetUserIdx())
                 .orElseThrow(UserNotFoundException::new);
-        Room room = roomRepository.findById(request.getTargetRoomIdx())
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(request.getTargetRoomIdx())
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!room.getHost().getIdx().equals(sender.getIdx())) {

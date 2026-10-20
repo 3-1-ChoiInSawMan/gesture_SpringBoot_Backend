@@ -4,6 +4,7 @@ import chainsawman.gesture.dto.room.request.RoomJoinRequest;
 import chainsawman.gesture.dto.room.request.RoomPatchRequest;
 import chainsawman.gesture.dto.room.request.RoomRequest;
 import chainsawman.gesture.dto.room.response.*;
+import chainsawman.gesture.entity.call.CallParticipant;
 import chainsawman.gesture.entity.chat.ChatParticipant;
 import chainsawman.gesture.entity.chat.ChatRoom;
 import chainsawman.gesture.entity.room.Room;
@@ -23,7 +24,6 @@ import chainsawman.gesture.repository.call.CallRepository;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
 import chainsawman.gesture.repository.friend.FriendInviteRepository;
-import chainsawman.gesture.repository.meeting.MeetingRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -50,7 +50,6 @@ public class RoomService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final CallRepository callRepository;
     private final CallParticipantRepository callParticipantRepository;
-    private final MeetingRepository meetingRepository;
     private final FriendInviteRepository friendInviteRepository;
     private final MediaService mediaService;
     private final SecurityUtils securityUtils;
@@ -114,8 +113,8 @@ public class RoomService {
     @Transactional(readOnly = true)
     public Page<RoomListResponse> getRooms(Pageable pageable, RoomType category) {
         Page<Room> rooms = (category != null)
-                ? roomRepository.findByCategory(category, pageable)
-                : roomRepository.findAll(pageable);
+                ? roomRepository.findByCategoryAndDeletedAtIsNull(category, pageable)
+                : roomRepository.findByDeletedAtIsNull(pageable);
 
         Map<String, String> profileUrlMap = fetchHostProfileUrls(rooms);
 
@@ -129,8 +128,8 @@ public class RoomService {
     @Transactional(readOnly = true)
     public Page<RoomListResponse> searchRooms(Pageable pageable, String keyword, RoomType category) {
         Page<Room> rooms = (category != null)
-                ? roomRepository.findByTitleContainingIgnoreCaseAndCategory(keyword, category, pageable)
-                : roomRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+                ? roomRepository.findByTitleContainingIgnoreCaseAndCategoryAndDeletedAtIsNull(keyword, category, pageable)
+                : roomRepository.findByTitleContainingIgnoreCaseAndDeletedAtIsNull(keyword, pageable);
 
         Map<String, String> profileUrlMap = fetchHostProfileUrls(rooms);
 
@@ -143,7 +142,7 @@ public class RoomService {
 
     @Transactional(readOnly = true)
     public RoomDetailResponse getRoomDetail(Long roomIdx) {
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
         int currentParticipant = roomMemberRepository.countByRoom_Idx(roomIdx);
 
@@ -163,7 +162,7 @@ public class RoomService {
     @Transactional
     public RoomPatchResponse patchRoom(Long roomIdx, RoomPatchRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!room.getHost().getIdx().equals(currentUser.getIdx())) {
@@ -211,26 +210,26 @@ public class RoomService {
     @Transactional
     public RoomDeleteResponse deleteRoom(Long roomIdx) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!room.getHost().getIdx().equals(currentUser.getIdx())) {
             throw new NotRoomHostException();
         }
 
-        deleteRoomWithRelations(room);
+        softDeleteRoom(room);
 
         return RoomDeleteResponse.builder()
                 .deleted(true)
                 .roomIdx(roomIdx)
-                .deletedAt(LocalDateTime.now())
+                .deletedAt(room.getDeletedAt())
                 .build();
     }
 
     @Transactional
     public RoomJoinResponse joinRoom(Long roomIdx, RoomJoinRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         if (roomMemberRepository.existsByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx())) {
@@ -276,7 +275,7 @@ public class RoomService {
     @Transactional
     public RoomLeaveResponse leaveRoom(Long roomIdx) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         RoomMember member = roomMemberRepository.findByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx())
@@ -305,7 +304,7 @@ public class RoomService {
                         .newHostIdx(nextMember.getUser().getIdx())
                         .build();
             } else {
-                deleteRoomWithRelations(room);
+                softDeleteRoom(room);
 
                 return RoomLeaveResponse.builder()
                         .roomIdx(roomIdx)
@@ -322,16 +321,26 @@ public class RoomService {
                 .build();
     }
 
-    // 방을 참조하는 데이터(회의록, 통화 참여자, 통화, 친구 초대, 방 멤버)를 먼저 지운 뒤 방 삭제
+    // 소프트 삭제: 통화 기록·회의록은 남기고 deletedAt만 기록. 멤버·친구 초대는 삭제
     @Transactional
-    public void deleteRoomWithRelations(Room room) {
+    public void softDeleteRoom(Room room) {
         Long roomIdx = room.getIdx();
-        meetingRepository.deleteAllByRoom_Idx(roomIdx);
-        callParticipantRepository.deleteAllByCall_Room_Idx(roomIdx);
-        callRepository.deleteAllByRoom_Idx(roomIdx);
+        LocalDateTime now = LocalDateTime.now();
+
+        // 진행 중인 통화가 있으면 종료 처리 (참여자가 다른 통화에 못 들어가는 문제 방지)
+        callRepository.findByRoom_IdxAndEndedAtIsNull(roomIdx).ifPresent(call -> {
+            List<CallParticipant> participants = callParticipantRepository
+                    .findByCall_IdxAndLeftAtIsNullOrderByJoinedAtAsc(call.getIdx());
+            participants.forEach(p -> p.setLeftAt(now));
+            callParticipantRepository.saveAll(participants);
+            call.setEndedAt(now);
+            callRepository.save(call);
+        });
+
         friendInviteRepository.deleteAllByRoom_Idx(roomIdx);
         roomMemberRepository.deleteAllByRoom_Idx(roomIdx);
-        roomRepository.delete(room);
+        room.setDeletedAt(now);
+        roomRepository.save(room);
     }
 
     private Map<String, String> fetchHostProfileUrls(Page<Room> rooms) {

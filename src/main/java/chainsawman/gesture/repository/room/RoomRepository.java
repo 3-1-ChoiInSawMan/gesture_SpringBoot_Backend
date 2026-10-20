@@ -7,14 +7,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    Page<Room> findByCategory(RoomType category, Pageable pageable);
+    Optional<Room> findByIdxAndDeletedAtIsNull(Long idx);
 
-    Page<Room> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    Page<Room> findByDeletedAtIsNull(Pageable pageable);
 
-    Page<Room> findByTitleContainingIgnoreCaseAndCategory(String title, RoomType category, Pageable pageable);
+    Page<Room> findByCategoryAndDeletedAtIsNull(RoomType category, Pageable pageable);
 
-    List<Room> findAllByHost_Idx(Long hostIdx);
+    Page<Room> findByTitleContainingIgnoreCaseAndDeletedAtIsNull(String title, Pageable pageable);
+
+    Page<Room> findByTitleContainingIgnoreCaseAndCategoryAndDeletedAtIsNull(String title, RoomType category, Pageable pageable);
+
+    List<Room> findAllByHost_IdxAndDeletedAtIsNull(Long hostIdx);
 }

@@ -10,6 +10,4 @@ public interface CallRepository extends JpaRepository<Call, Long> {
     Optional<Call> findByRoom_IdxAndEndedAtIsNull(Long roomIdx);
 
     boolean existsByRoom_IdxAndEndedAtIsNull(Long roomIdx);
-
-    void deleteAllByRoom_Idx(Long roomIdx);
 }

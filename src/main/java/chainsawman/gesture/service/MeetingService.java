@@ -112,6 +112,7 @@ public class MeetingService {
 
     @Transactional(readOnly = true)
     public List<MeetingListItemResponse> getMinutesList(Long roomIdx) {
+        // 회의록은 기록으로 남기므로 삭제된 방이어도 조회 허용
         roomRepository.findById(roomIdx).orElseThrow(RoomNotFoundException::new);
 
         return meetingRepository.findByCall_Room_IdxOrderByStartedAtDesc(roomIdx).stream()

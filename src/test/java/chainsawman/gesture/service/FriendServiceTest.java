@@ -82,7 +82,7 @@ class FriendServiceTest {
 
         given(securityUtils.getCurrentUser()).willReturn(sender);
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
-        given(roomRepository.findById(55L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(55L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(55L, 2L)).willReturn(false);
         given(friendInviteRepository.save(any(FriendInvite.class))).willAnswer(inv -> {
             FriendInvite invite = inv.getArgument(0);
@@ -121,7 +121,7 @@ class FriendServiceTest {
 
         given(securityUtils.getCurrentUser()).willReturn(receiver); // receiver는 host가 아님
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
-        given(roomRepository.findById(55L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(55L)).willReturn(Optional.of(room));
 
         assertThatThrownBy(() -> friendService.invite(request))
                 .isInstanceOf(NotRoomHostException.class);
@@ -134,7 +134,7 @@ class FriendServiceTest {
 
         given(securityUtils.getCurrentUser()).willReturn(sender);
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
-        given(roomRepository.findById(55L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(55L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(55L, 2L)).willReturn(false);
         given(friendInviteRepository.existsBySender_IdxAndReceiver_IdxAndRoom_IdxAndStatus(
                 1L, 2L, 55L, InvitationStatus.PENDING)).willReturn(true);
@@ -150,7 +150,7 @@ class FriendServiceTest {
 
         given(securityUtils.getCurrentUser()).willReturn(sender);
         given(userRepository.findByIdxAndIsDeactivatedFalse(2L)).willReturn(Optional.of(receiver));
-        given(roomRepository.findById(999L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(999L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> friendService.invite(request))
                 .isInstanceOf(RoomNotFoundException.class);

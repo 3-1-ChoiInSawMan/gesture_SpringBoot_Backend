@@ -22,15 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// 실제 DB(H2) 외래키 제약조건으로 방 삭제를 검증
+// 실제 DB(H2) 외래키 제약조건으로 방 소프트 삭제를 검증
 @DataJpaTest
 @Import(RoomService.class)
 class RoomDeleteIntegrationTest {
@@ -49,8 +49,8 @@ class RoomDeleteIntegrationTest {
     @Autowired FriendInviteRepository friendInviteRepository;
 
     @Test
-    @DisplayName("방 삭제 - 통화/통화참여자/회의록/친구초대/멤버가 있어도 외래키 오류 없이 삭제")
-    void deleteRoomWithRelations_removes_all_children() {
+    @DisplayName("방 소프트 삭제 - 통화 기록·회의록은 남고, 멤버·친구 초대는 삭제, 진행 중인 통화는 종료")
+    void softDeleteRoom_keeps_records() {
         User host = persistUser("host");
         User friend = persistUser("friend");
 
@@ -58,7 +58,8 @@ class RoomDeleteIntegrationTest {
         em.persist(room);
         em.persist(RoomMember.builder().room(room).user(host).role(RoomRole.HOST).build());
 
-        Call call = Call.builder().room(room).startedBy(host).endedAt(LocalDateTime.now()).build();
+        // 진행 중인 통화
+        Call call = Call.builder().room(room).startedBy(host).build();
         em.persist(call);
         em.persist(CallParticipant.builder().call(call).user(host).build());
 
@@ -74,14 +75,30 @@ class RoomDeleteIntegrationTest {
         em.clear();
 
         Long roomIdx = room.getIdx();
-        roomService.deleteRoomWithRelations(roomRepository.findById(roomIdx).orElseThrow());
+        roomService.softDeleteRoom(roomRepository.findByIdxAndDeletedAtIsNull(roomIdx).orElseThrow());
         em.flush();
+        em.clear();
 
-        assertThat(roomRepository.findById(roomIdx)).isEmpty();
+        // 방 행은 남아 있고 deletedAt이 기록됨
+        assertThat(roomRepository.findById(roomIdx)).get()
+                .extracting(Room::getDeletedAt).isNotNull();
+
+        // 살아 있는 방 조회에서는 제외
+        assertThat(roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)).isEmpty();
+        assertThat(roomRepository.findByDeletedAtIsNull(Pageable.unpaged()).getContent()).isEmpty();
+        assertThat(roomRepository.findByTitleContainingIgnoreCaseAndDeletedAtIsNull("방", Pageable.unpaged())
+                .getContent()).isEmpty();
+        assertThat(roomRepository.findAllByHost_IdxAndDeletedAtIsNull(host.getIdx())).isEmpty();
+
+        // 통화 기록·회의록은 유지, 진행 중이던 통화는 종료 처리
+        assertThat(callRepository.count()).isEqualTo(1);
+        assertThat(callRepository.findByRoom_IdxAndEndedAtIsNull(roomIdx)).isEmpty();
+        assertThat(callParticipantRepository.count()).isEqualTo(1);
+        assertThat(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(host.getIdx())).isFalse();
+        assertThat(meetingRepository.findByCall_Room_IdxOrderByStartedAtDesc(roomIdx)).hasSize(1);
+
+        // 멤버·친구 초대는 삭제
         assertThat(roomMemberRepository.count()).isZero();
-        assertThat(callRepository.count()).isZero();
-        assertThat(callParticipantRepository.count()).isZero();
-        assertThat(meetingRepository.count()).isZero();
         assertThat(friendInviteRepository.count()).isZero();
     }
 

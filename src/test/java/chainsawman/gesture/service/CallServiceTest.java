@@ -69,7 +69,7 @@ class CallServiceTest {
         Call newCall = buildCall(100L, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.empty());
         given(callRepository.save(any(Call.class))).willReturn(newCall);
@@ -97,7 +97,7 @@ class CallServiceTest {
         Call existingCall = buildCall(100L, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(existingCall));
         given(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(1L)).willReturn(false);
@@ -120,7 +120,7 @@ class CallServiceTest {
     @DisplayName("통화 참여 - 존재하지 않는 방이면 RoomNotFoundException")
     void joinCall_room_not_found() {
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> callService.joinCall(99L))
                 .isInstanceOf(RoomNotFoundException.class);
@@ -130,7 +130,7 @@ class CallServiceTest {
     @DisplayName("통화 참여 - 방 멤버가 아니면 NotRoomMemberException")
     void joinCall_not_a_room_member() {
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(false);
 
         assertThatThrownBy(() -> callService.joinCall(10L))
@@ -143,7 +143,7 @@ class CallServiceTest {
         Call existingCall = buildCall(100L, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(roomMemberRepository.existsByRoom_IdxAndUser_Idx(10L, 1L)).willReturn(true);
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(existingCall));
         given(callParticipantRepository.existsByUser_IdxAndLeftAtIsNull(1L)).willReturn(true);
@@ -161,7 +161,7 @@ class CallServiceTest {
         CallParticipant participant = buildParticipant(call, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(call));
         given(callParticipantRepository.findByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L))
                 .willReturn(Optional.of(participant));
@@ -185,7 +185,7 @@ class CallServiceTest {
         CallParticipant participant = buildParticipant(call, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(call));
         given(callParticipantRepository.findByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L))
                 .willReturn(Optional.of(participant));
@@ -205,7 +205,7 @@ class CallServiceTest {
     @DisplayName("통화 나가기 - 존재하지 않는 방이면 RoomNotFoundException")
     void leaveCall_room_not_found() {
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> callService.leaveCall(99L))
                 .isInstanceOf(RoomNotFoundException.class);
@@ -215,7 +215,7 @@ class CallServiceTest {
     @DisplayName("통화 나가기 - 활성 통화 없으면 NoActiveCallException")
     void leaveCall_no_active_call() {
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> callService.leaveCall(10L))
@@ -228,7 +228,7 @@ class CallServiceTest {
         Call call = buildCall(100L, user);
 
         given(securityUtils.getCurrentUser()).willReturn(user);
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(call));
         given(callParticipantRepository.findByCall_IdxAndUser_IdxAndLeftAtIsNull(100L, 1L))
                 .willReturn(Optional.empty());
@@ -250,7 +250,7 @@ class CallServiceTest {
         CallParticipant hostParticipant = buildParticipant(call, user);
         CallParticipant otherParticipant = buildParticipant(call, other);
 
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.of(call));
         given(callParticipantRepository.findByCall_IdxAndLeftAtIsNullOrderByJoinedAtAsc(100L))
                 .willReturn(List.of(hostParticipant, otherParticipant));
@@ -268,7 +268,7 @@ class CallServiceTest {
     @Test
     @DisplayName("참가자 조회 - 존재하지 않는 방이면 RoomNotFoundException")
     void getParticipants_room_not_found() {
-        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> callService.getParticipants(99L))
                 .isInstanceOf(RoomNotFoundException.class);
@@ -277,7 +277,7 @@ class CallServiceTest {
     @Test
     @DisplayName("참가자 조회 - 활성 통화 없으면 NoActiveCallException")
     void getParticipants_no_active_call() {
-        given(roomRepository.findById(10L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(10L)).willReturn(Optional.of(room));
         given(callRepository.findByRoom_IdxAndEndedAtIsNull(10L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> callService.getParticipants(10L))

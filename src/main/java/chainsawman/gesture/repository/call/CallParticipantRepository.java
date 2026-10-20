@@ -17,6 +17,4 @@ public interface CallParticipantRepository extends JpaRepository<CallParticipant
     List<CallParticipant> findByCall_IdxAndLeftAtIsNullOrderByJoinedAtAsc(Long callIdx);
 
     int countByCall_IdxAndLeftAtIsNull(Long callIdx);
-
-    void deleteAllByCall_Room_Idx(Long roomIdx);
 }

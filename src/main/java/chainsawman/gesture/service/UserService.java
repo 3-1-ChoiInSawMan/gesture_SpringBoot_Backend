@@ -70,7 +70,7 @@ public class UserService {
     public WithdrawResponse deleteUser() {
         User user = securityUtils.getCurrentUser();
 
-        List<Room> hostedRooms = roomRepository.findAllByHost_Idx(user.getIdx());
+        List<Room> hostedRooms = roomRepository.findAllByHost_IdxAndDeletedAtIsNull(user.getIdx());
         for (Room room : hostedRooms) {
             roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(room.getIdx(), user.getIdx())
                     .ifPresentOrElse(
@@ -81,7 +81,7 @@ public class UserService {
                                 roomRepository.save(room);
                                 roomMemberRepository.deleteByRoom_IdxAndUser_Idx(room.getIdx(), user.getIdx());
                             },
-                            () -> roomService.deleteRoomWithRelations(room)
+                            () -> roomService.softDeleteRoom(room)
                     );
         }
 

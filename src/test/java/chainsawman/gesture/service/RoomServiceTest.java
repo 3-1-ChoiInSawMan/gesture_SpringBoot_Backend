@@ -20,7 +20,6 @@ import chainsawman.gesture.repository.call.CallRepository;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
 import chainsawman.gesture.repository.friend.FriendInviteRepository;
-import chainsawman.gesture.repository.meeting.MeetingRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -53,7 +52,6 @@ class RoomServiceTest {
     @Mock ChatParticipantRepository chatParticipantRepository;
     @Mock CallRepository callRepository;
     @Mock CallParticipantRepository callParticipantRepository;
-    @Mock MeetingRepository meetingRepository;
     @Mock FriendInviteRepository friendInviteRepository;
     @Mock MediaService mediaService;
     @Mock SecurityUtils securityUtils;
@@ -150,7 +148,7 @@ class RoomServiceTest {
 
         RoomPatchRequest request = new RoomPatchRequest(null, null, 0, null, null, "new-thumb");
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.countByRoom_Idx(1L)).willReturn(2);
         given(mediaService.getMediaUrl("new-thumb"))
                 .willReturn(MediaUrlResponse.builder().fileUrl("https://s3.example.com/new.jpg").build());
@@ -170,7 +168,7 @@ class RoomServiceTest {
 
         RoomPatchRequest request = new RoomPatchRequest(null, null, 0, null, null, "bad-uuid");
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.countByRoom_Idx(1L)).willReturn(1);
         given(mediaService.getMediaUrl("bad-uuid")).willThrow(new MediaNotFoundException());
 
@@ -181,7 +179,7 @@ class RoomServiceTest {
     @Test
     @DisplayName("방 수정 - 존재하지 않는 방이면 RoomNotFoundException")
     void patchRoom_room_not_found() {
-        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> roomService.patchRoom(99L, new RoomPatchRequest(null, null, 0, null, null, null)))
                 .isInstanceOf(RoomNotFoundException.class);
@@ -195,7 +193,7 @@ class RoomServiceTest {
         Room room = buildRoom(1L, user, null);
         RoomMember member = buildMember(user, RoomRole.MEMBER);
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(member));
 
         RoomLeaveResponse response = roomService.leaveRoom(1L);
@@ -216,7 +214,7 @@ class RoomServiceTest {
         RoomMember hostMember = buildMember(user, RoomRole.HOST);
         RoomMember nextMember = buildMember(nextUser, RoomRole.MEMBER);
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(hostMember));
         given(roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(1L, 1L))
                 .willReturn(Optional.of(nextMember));
@@ -233,12 +231,12 @@ class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("통화방 나가기 - 방장이 마지막 멤버이면 방 삭제")
+    @DisplayName("통화방 나가기 - 방장이 마지막 멤버이면 방 소프트 삭제")
     void leaveRoom_host_last_member() {
         Room room = buildRoom(1L, user, null);
         RoomMember hostMember = buildMember(user, RoomRole.HOST);
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(hostMember));
         given(roomMemberRepository.findTopByRoom_IdxAndUser_IdxNotOrderByCreatedAtAsc(1L, 1L))
                 .willReturn(Optional.empty());
@@ -247,13 +245,15 @@ class RoomServiceTest {
 
         assertThat(response.isDeleted()).isTrue();
         verify(roomMemberRepository).deleteAllByRoom_Idx(1L);
-        verify(roomRepository).delete(room);
+        verify(roomRepository).save(room);
+        verify(roomRepository, never()).delete(any(Room.class));
+        assertThat(room.getDeletedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("통화방 나가기 - 존재하지 않는 방이면 RoomNotFoundException")
     void leaveRoom_room_not_found() {
-        given(roomRepository.findById(99L)).willReturn(Optional.empty());
+        given(roomRepository.findByIdxAndDeletedAtIsNull(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> roomService.leaveRoom(99L))
                 .isInstanceOf(RoomNotFoundException.class);
@@ -264,7 +264,7 @@ class RoomServiceTest {
     void leaveRoom_not_a_member() {
         Room room = buildRoom(1L, user, null);
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> roomService.leaveRoom(1L))
@@ -280,7 +280,7 @@ class RoomServiceTest {
         Room room = buildRoom(1L, user, chatRoom);
         RoomMember member = buildMember(user, RoomRole.MEMBER);
 
-        given(roomRepository.findById(1L)).willReturn(Optional.of(room));
+        given(roomRepository.findByIdxAndDeletedAtIsNull(1L)).willReturn(Optional.of(room));
         given(roomMemberRepository.findByRoom_IdxAndUser_Idx(1L, 1L)).willReturn(Optional.of(member));
 
         roomService.leaveRoom(1L);
