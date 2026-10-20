@@ -18,8 +18,12 @@ import chainsawman.gesture.exceptions.room.RoomMemberNotFoundException;
 import chainsawman.gesture.exceptions.room.NotRoomHostException;
 import chainsawman.gesture.exceptions.room.RoomNotFoundException;
 import chainsawman.gesture.exceptions.user.InvalidPasswordException;
+import chainsawman.gesture.repository.call.CallParticipantRepository;
+import chainsawman.gesture.repository.call.CallRepository;
 import chainsawman.gesture.repository.chat.ChatParticipantRepository;
 import chainsawman.gesture.repository.chat.ChatRoomRepository;
+import chainsawman.gesture.repository.friend.FriendInviteRepository;
+import chainsawman.gesture.repository.meeting.MeetingRepository;
 import chainsawman.gesture.repository.room.RoomMemberRepository;
 import chainsawman.gesture.repository.room.RoomRepository;
 import chainsawman.gesture.security.SecurityUtils;
@@ -44,6 +48,10 @@ public class RoomService {
     private final RoomMemberRepository roomMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final CallRepository callRepository;
+    private final CallParticipantRepository callParticipantRepository;
+    private final MeetingRepository meetingRepository;
+    private final FriendInviteRepository friendInviteRepository;
     private final MediaService mediaService;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
@@ -210,8 +218,7 @@ public class RoomService {
             throw new NotRoomHostException();
         }
 
-        roomMemberRepository.deleteAllByRoom_Idx(roomIdx);
-        roomRepository.delete(room);
+        deleteRoomWithRelations(room);
 
         return RoomDeleteResponse.builder()
                 .deleted(true)
@@ -298,8 +305,7 @@ public class RoomService {
                         .newHostIdx(nextMember.getUser().getIdx())
                         .build();
             } else {
-                roomMemberRepository.deleteAllByRoom_Idx(roomIdx);
-                roomRepository.delete(room);
+                deleteRoomWithRelations(room);
 
                 return RoomLeaveResponse.builder()
                         .roomIdx(roomIdx)
@@ -314,6 +320,18 @@ public class RoomService {
                 .roomIdx(roomIdx)
                 .deleted(false)
                 .build();
+    }
+
+    // 방을 참조하는 데이터(회의록, 통화 참여자, 통화, 친구 초대, 방 멤버)를 먼저 지운 뒤 방 삭제
+    @Transactional
+    public void deleteRoomWithRelations(Room room) {
+        Long roomIdx = room.getIdx();
+        meetingRepository.deleteAllByRoom_Idx(roomIdx);
+        callParticipantRepository.deleteAllByCall_Room_Idx(roomIdx);
+        callRepository.deleteAllByRoom_Idx(roomIdx);
+        friendInviteRepository.deleteAllByRoom_Idx(roomIdx);
+        roomMemberRepository.deleteAllByRoom_Idx(roomIdx);
+        roomRepository.delete(room);
     }
 
     private Map<String, String> fetchHostProfileUrls(Page<Room> rooms) {

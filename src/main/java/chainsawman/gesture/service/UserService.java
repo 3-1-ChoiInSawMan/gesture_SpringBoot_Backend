@@ -31,6 +31,7 @@ public class UserService {
     private final MediaService mediaService;
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
+    private final RoomService roomService;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
 
@@ -80,10 +81,7 @@ public class UserService {
                                 roomRepository.save(room);
                                 roomMemberRepository.deleteByRoom_IdxAndUser_Idx(room.getIdx(), user.getIdx());
                             },
-                            () -> {
-                                roomMemberRepository.deleteAllByRoom_Idx(room.getIdx());
-                                roomRepository.delete(room);
-                            }
+                            () -> roomService.deleteRoomWithRelations(room)
                     );
         }
 

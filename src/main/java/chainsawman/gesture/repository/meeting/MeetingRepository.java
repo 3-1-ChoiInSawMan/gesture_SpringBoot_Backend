@@ -14,4 +14,6 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     Optional<Meeting> findByCall_IdxAndStatus(Long callIdx, MeetingStatus status);
 
     boolean existsByCall_IdxAndStatus(Long callIdx, MeetingStatus status);
+
+    void deleteAllByRoom_Idx(Long roomIdx);
 }
