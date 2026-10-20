@@ -36,6 +36,7 @@ class UserServiceTest {
     @Mock MediaService mediaService;
     @Mock RoomRepository roomRepository;
     @Mock RoomMemberRepository roomMemberRepository;
+    @Mock RoomService roomService;
     @Mock SecurityUtils securityUtils;
     @Mock PasswordEncoder passwordEncoder;
 
