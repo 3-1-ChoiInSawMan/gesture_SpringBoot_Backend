@@ -38,7 +38,7 @@ public class CallService {
     @Transactional
     public CallJoinResponse joinCall(Long roomIdx) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         if (!roomMemberRepository.existsByRoom_IdxAndUser_Idx(roomIdx, currentUser.getIdx())) {
@@ -76,7 +76,7 @@ public class CallService {
     @Transactional
     public CallLeaveResponse leaveCall(Long roomIdx) {
         User currentUser = securityUtils.getCurrentUser();
-        Room room = roomRepository.findById(roomIdx)
+        Room room = roomRepository.findByIdxAndDeletedAtIsNull(roomIdx)
                 .orElseThrow(RoomNotFoundException::new);
 
         Call call = callRepository.findByRoom_IdxAndEndedAtIsNull(roomIdx)
@@ -109,7 +109,7 @@ public class CallService {
 
     @Transactional(readOnly = true)
     public CallParticipantsResponse getParticipants(Long roomIdx) {
-        roomRepository.findById(roomIdx).orElseThrow(RoomNotFoundException::new);
+        roomRepository.findByIdxAndDeletedAtIsNull(roomIdx).orElseThrow(RoomNotFoundException::new);
 
         Call call = callRepository.findByRoom_IdxAndEndedAtIsNull(roomIdx)
                 .orElseThrow(NoActiveCallException::new);
